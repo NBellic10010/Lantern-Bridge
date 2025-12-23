@@ -1,0 +1,20 @@
+[package]
+name = "bridge_core"
+version = "0.1.0"
+edition = "2021"
+
+[toolchain]
+channel = "nightly-2022-08-11"
+components = ["rust-src", "rustfmt", "clippy"]
+targets = ["wasm32-unknown-unknown"]
+
+[lib]
+crate-type = ["cdylib", "rlib"] # 關鍵：必須包含 cdylib 才能編譯成 wasm
+
+[dependencies]
+casper-contract = "5.1.1" # 請根據 Casper 最新版本調整
+casper-types = "6.1.0"
+
+[profile.release]
+lto = true
+codegen-units = 1 # 優化 WASM 體積

@@ -1,0 +1,28 @@
+{
+  "rust-analyzer.linkedProjects": [
+    "packages/contracts/bridge_core/Cargo.toml"
+  ],
+  "rust-analyzer.rustup.toolchain": "nightly-2022-08-11",
+  "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
+  "rust-analyzer.cargo.allFeatures": true,
+  "rust-analyzer.cargo.buildScripts.enable": true,
+  "rust-analyzer.procMacro.enable": true,
+  "rust-analyzer.checkOnSave.command": "check",
+  "rust-analyzer.checkOnSave.extraArgs": [
+    "--target",
+    "wasm32-unknown-unknown"
+  ],
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.formatOnSave": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/target/**": true
+  },
+  "rust-analyzer.files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/target/**": true
+  }
+}
+
