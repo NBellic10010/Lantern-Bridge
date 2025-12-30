@@ -36,8 +36,7 @@ export class Relayer {
     this.ethWatcher = new EthWatcher(this.ethProvider, this.cfg, (msg) =>
       this.enqueue(msg)
     );
-    this.csprWatcher = new CsprWatcher(this.csprClient, this.cfg, (msg) =>
-      this.enqueue(msg)
+    this.csprWatcher = new CsprWatcher(this.csprClient, this.cfg, this.queue
     );
   }
 
