@@ -27,6 +27,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 
 [[package]]
+name = "base64"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+
+[[package]]
 name = "base64ct"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -64,6 +70,9 @@ version = "0.1.0"
 dependencies = [
  "casper-contract",
  "casper-types",
+ "casper_types_derive",
+ "cep18",
+ "hex",
 ]
 
 [[package]]
@@ -84,13 +93,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "casper-event-standard"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9bce72275b1a5734a307929fdaf06e61c984b1daa05a350380b55737c9647aa0"
+dependencies = [
+ "casper-contract",
+ "casper-event-standard-macro",
+ "casper-types",
+]
+
+[[package]]
+name = "casper-event-standard-macro"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3dba81c875af746ff7406ce5cf8d6d50a2cdac76664c1d6db0b3b847d1687e0d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "casper-types"
 version = "6.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9e04cda524136cc94ca5d8a1eff0b33de4eb98914344c736abda370321e7e87"
 dependencies = [
  "base16",
- "base64",
+ "base64 0.13.1",
  "bitflags",
  "blake2",
  "derive_more",
@@ -111,6 +142,30 @@ dependencies = [
  "serde_json",
  "tracing",
  "uint",
+]
+
+[[package]]
+name = "casper_types_derive"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1185d558597a7985e936c1e312810e46d3904888b298635f78370b729055fa28"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "cep18"
+version = "2.0.0"
+dependencies = [
+ "base64 0.22.1",
+ "casper-contract",
+ "casper-event-standard",
+ "casper-types",
+ "hex",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -208,7 +263,7 @@ checksum = "f46882e17999c6cc590af592290432be3bce0428cb0d5f8b6715e4dc7b383eb3"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.111",
 ]
 
 [[package]]
@@ -231,7 +286,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustc_version",
- "syn",
+ "syn 2.0.111",
 ]
 
 [[package]]
@@ -461,7 +516,7 @@ checksum = "ed3955f1a9c7c0c15e092f9c887db08b1fc683305fdf6eb6684f22555355e202"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.111",
 ]
 
 [[package]]
@@ -650,7 +705,7 @@ checksum = "d540f220d3187173da220f885ab66608367b6574e925011a9353e4badda91d79"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.111",
 ]
 
 [[package]]
@@ -708,6 +763,17 @@ name = "subtle"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
+
+[[package]]
+name = "syn"
+version = "1.0.109"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b64191b275b66ffe2469e8af2c1cfe3bafa67b529ead792a6d0160888b4237"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "unicode-ident",
+]
 
 [[package]]
 name = "syn"

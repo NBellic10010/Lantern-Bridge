@@ -2,10 +2,8 @@
 extern crate alloc;
 
 use alloc::{string::String, vec::Vec};
-use casper_types::{
-    bytesrepr::{FromBytes, ToBytes},
-    ApiError, CLTyped, Key, U256,
-};
+use casper_types::{ApiError, Key, U256};
+use casper_types_derive::{CLTyped, FromBytes, ToBytes};
 
 #[repr(u16)]
 pub enum BridgeError {
@@ -25,6 +23,8 @@ pub enum BridgeError {
     InvalidKey = 78,
     MissingKey = 79,
     Paused = 80,
+    TokenNotSet = 81,
+    AllowanceTooLow = 82,
 }
 
 impl From<BridgeError> for ApiError {
@@ -44,8 +44,8 @@ pub struct Guardian {
 #[derive(Clone, Debug, CLTyped, ToBytes, FromBytes)]
 pub struct BridgeConfig {
     pub admin: Key,
-    pub threshold: u16,
-    pub base_apr_bps: u16,
+    pub threshold: u32,
+    pub base_apr_bps: u32,
     pub paused: bool,
 }
 
@@ -66,7 +66,7 @@ pub struct UnlockRequest {
     pub dst_chain: String,     // 目标链
     pub timestamp_ms: u64,     // 请求时间
     pub finalized: bool,       // 是否已经完成
-    pub approvals_weight: u16, // 已累计的权重
+    pub approvals_weight: u32, // 已累计的权重
 }
 
 /// 热升级/热修复的 Patch
@@ -74,7 +74,7 @@ pub struct UnlockRequest {
 pub struct HotSwapPatch {
     pub patch_hash: String,   // 新 wasm/逻辑的哈希标识
     pub proposer: Key,        // 提案人
-    pub approved_weight: u16, // 已审批的权重
+    pub approved_weight: u32, // 已审批的权重
     pub activated: bool,      // 是否已激活
 }
 

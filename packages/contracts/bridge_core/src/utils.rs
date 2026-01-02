@@ -4,7 +4,7 @@ extern crate alloc;
 use casper_types::U256;
 
 /// 基于毫秒时间增量与年化 APR (bps) 计算利息
-pub fn compute_yield(principal: U256, apr_bps: u16, delta_ms: u64) -> U256 {
+pub fn compute_yield(principal: U256, apr_bps: u32, delta_ms: u64) -> U256 {
     if principal.is_zero() || delta_ms == 0 || apr_bps == 0 {
         return U256::zero();
     }

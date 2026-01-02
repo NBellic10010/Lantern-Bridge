@@ -3,17 +3,15 @@ name = "bridge_core"
 version = "0.1.0"
 edition = "2021"
 
-[toolchain]
-channel = "nightly-2022-08-11"
-components = ["rust-src", "rustfmt", "clippy"]
-targets = ["wasm32-unknown-unknown"]
-
 [lib]
 crate-type = ["cdylib", "rlib"] # 關鍵：必須包含 cdylib 才能編譯成 wasm
 
 [dependencies]
 casper-contract = "5.1.1" # 請根據 Casper 最新版本調整
 casper-types = "6.1.0"
+casper_types_derive = "0.1.0"
+cep18 = {path = "../cep18/contracts/contract"}
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 
 [profile.release]
 lto = true

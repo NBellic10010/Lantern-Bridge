@@ -17,6 +17,7 @@ pub const DICT_BALANCES: &str = "vault_balances"; // 用户生息金库
 pub const DICT_UNLOCK_REQS: &str = "unlock_requests"; // 解锁请求
 pub const DICT_GUARDIANS: &str = "guardian_weights"; // 守护节点权重 用于投票 （守护节点是多个节点组成的，每个节点有不同的权重）
 pub const DICT_HOTSWAP: &str = "hotswap_patches";
+pub const DICT_CEETH_MINT_REQS: &str = "ceeth_mint_requests";
 pub const DICT_HOTSWAP_VOTES: &str = "hotswap_votes";
 pub const DICT_UNLOCK_VOTES: &str = "unlock_votes";
 pub const KEY_ADMIN: &str = "admin"; // 管理员 Key
@@ -24,6 +25,7 @@ pub const KEY_THRESHOLD: &str = "threshold";
 pub const KEY_BASE_APR_BPS: &str = "base_apr_bps";
 pub const KEY_PAUSED: &str = "paused";
 pub const KEY_ACTIVE_PATCH: &str = "active_patch";
+pub const KEY_CEETH_TOKEN: &str = "ceeth_token";
 
 // ==========================================
 // 2. 核心工具函数 (Generic Helpers)
@@ -70,7 +72,7 @@ pub fn is_tx_processed(tx_hash: &str) -> bool {
     read_dictionary_value::<bool>(DICT_PROCESSED_TXS, tx_hash).unwrap_or(false)
 }
 
-/// 标记交易为“已处理”
+/// 标记交易为“已处理”,防止重放攻击
 pub fn mark_tx_processed(tx_hash: &str) {
     write_dictionary_value(DICT_PROCESSED_TXS, tx_hash, true);
 }
@@ -114,6 +116,7 @@ pub fn ensure_dictionaries() {
         DICT_HOTSWAP,
         DICT_HOTSWAP_VOTES,
         DICT_UNLOCK_VOTES,
+        DICT_CEETH_MINT_REQS,
     ];
     //遍历字典列表，如果字典不存在，则创建字典，并设置为空
 
@@ -126,12 +129,12 @@ pub fn ensure_dictionaries() {
 }
 
 /// 初始化/写入基础配置
-pub fn write_base_config(threshold: u16, apr_bps: u16, paused: bool) {
-    let threshold_uref = get_or_create_uref(KEY_THRESHOLD, threshold);
-    storage::write(threshold_uref, threshold);
+pub fn write_base_config(threshold: u32, apr_bps: u32, paused: bool) {
+    let threshold_uref = get_or_create_uref(KEY_THRESHOLD, threshold.to_bytes().unwrap_or_revert());
+    storage::write(threshold_uref, threshold.to_bytes().unwrap_or_revert());
 
-    let apr_uref = get_or_create_uref(KEY_BASE_APR_BPS, apr_bps);
-    storage::write(apr_uref, apr_bps);
+    let apr_uref = get_or_create_uref(KEY_BASE_APR_BPS, apr_bps.to_bytes().unwrap_or_revert());
+    storage::write(apr_uref, apr_bps.to_bytes().unwrap_or_revert());
 
     let paused_uref = get_or_create_uref(KEY_PAUSED, paused);
     storage::write(paused_uref, paused);
@@ -141,19 +144,17 @@ pub fn write_base_config(threshold: u16, apr_bps: u16, paused: bool) {
 }
 
 /// 读取阈值
-pub fn read_threshold() -> u16 {
+pub fn read_threshold() -> Option<u32> {
     let uref = get_uref(KEY_THRESHOLD);
 
-    storage::read()
-
-    // storage::read(uref)
-    //     .unwrap_or_revert()
-    //     .ok_or(BridgeError::MissingKey)
-    //     .unwrap_or_revert()
+    storage::read(uref)
+        .unwrap_or_revert()
+        .ok_or(BridgeError::MissingKey)
+        .unwrap_or_revert()
 }
 
 /// 读取 APR
-pub fn read_apr_bps() -> u16 {
+pub fn read_apr_bps() -> Option<u32> {
     let uref = get_uref(KEY_BASE_APR_BPS);
     storage::read(uref)
         .unwrap_or_revert()
@@ -171,6 +172,21 @@ pub fn is_paused() -> bool {
 pub fn set_paused(paused: bool) {
     let uref = get_uref(KEY_PAUSED);
     storage::write(uref, paused);
+}
+
+/// 设置 ceETH 合约哈希（仅管理员）
+pub fn set_ceeth_token(token: Key) {
+    let uref = get_or_create_uref(KEY_CEETH_TOKEN, token);
+    storage::write(uref, token);
+}
+
+/// 读取 ceETH 合约哈希
+pub fn get_ceeth_token() -> Key {
+    let uref = get_uref(KEY_CEETH_TOKEN);
+    storage::read(uref)
+        .unwrap_or_revert()
+        .ok_or(BridgeError::MissingKey)
+        .unwrap_or_revert()
 }
 
 /// 辅助：获取或创建单值 URef
