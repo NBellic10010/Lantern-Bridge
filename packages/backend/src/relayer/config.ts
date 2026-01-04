@@ -10,6 +10,10 @@ export const ConfigSchema = z.object({
   CSPR_FINALITY_DEPTH: z.coerce.number().min(0).default(5),
   CSPR_CHAIN_ID: z.string(),
   CSPR_DEPLOY_HASH_PREFIX: z.string().optional(),
+  
+  // Relayer 私钥 (用于签名交易)
+  ETH_PRIVATE_KEY: z.string().min(64), // Hex string without 0x or with 0x
+  CSPR_PRIVATE_KEY_PATH: z.string(), // Path to .pem file
 });
 
 export type RelayerConfig = z.infer<typeof ConfigSchema>;

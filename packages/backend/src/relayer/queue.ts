@@ -1,6 +1,6 @@
 import { Queue, Worker, QueueEvents, JobsOptions } from "bullmq";
-import IORedis from "ioredis";
 import pino from "pino";
+import IORedis from "ioredis";
 
 /**
  * 标准化跨链消息
@@ -17,6 +17,7 @@ export interface BridgeMessage {
   asset: string;
   amount: string;
   raw: unknown;
+  requestId: string;
 }
 
 export interface QueueConfig {

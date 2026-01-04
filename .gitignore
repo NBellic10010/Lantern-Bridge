@@ -7,3 +7,4 @@ build/
 .env
 .DS_Store
 .cursor/
+packages/backend/*_secret_key.pem

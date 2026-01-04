@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Chain {
+  EVM
+  CASPER
+}
+
+enum TxStatus {
+  PENDING
+  SIGNED
+  RELAYED
+  COMPLETED
+  FAILED
+}
+
+model Pair {
+  id           String @id // "cspr-eth"
+  srcChain     Chain
+  dstChain     Chain
+  srcToken     String // 合约地址
+  dstToken     String
+  symbol       String // "ETH"
+  decimals     Int
+  apy          Float  @default(0.0) // 缓存的 APR
+  isActive     Boolean @default(true)
+}
+
+model BridgeTransaction {
+  id           String   @id @default(uuid())
+  userAddress  String
+  srcChain     Chain
+  srcTxHash    String   @unique
+  amount       String
+  tokenSymbol  String
+  status       TxStatus @default(PENDING)
+  dstTxHash    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([userAddress])
+}
