@@ -3,10 +3,10 @@ extern crate alloc;
 
 use alloc::{format, string::String, vec::Vec};
 use casper_contract::{
-    contract_api::{account, runtime, storage, system},
+    contract_api::{runtime, storage, system},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casper_types::{contracts::ContractHash, runtime_args, CLTyped, Key, U256, U512};
+use casper_types::{contracts::ContractHash, runtime_args, Key, URef, U256, U512};
 
 //TODO 需要重写资金/钱包相关逻辑
 
@@ -16,11 +16,11 @@ use crate::{
         HotSwapProposed, PauseChanged, UnlockFinalized, UnlockRequested, YieldAccrued,
     },
     storage::{
-        ensure_dictionaries, get_admin, get_ceeth_token, get_guardian_weight, is_paused,
-        is_tx_processed, mark_tx_processed, read_apr_bps, read_dictionary_value, read_threshold,
-        set_admin, set_ceeth_token, set_paused, write_active_patch, write_base_config,
-        write_dictionary_value, DICT_BALANCES, DICT_CEETH_MINT_REQS, DICT_HOTSWAP,
-        DICT_UNLOCK_REQS, KEY_ADMIN,
+        ensure_dictionaries, get_admin, get_bridge_purse, get_ceeth_token, get_guardian_weight,
+        is_paused, is_tx_processed, mark_tx_processed, read_apr_bps, read_dictionary_value,
+        read_threshold, set_admin, set_ceeth_token, set_paused, write_active_patch,
+        write_base_config, write_dictionary_value, DICT_BALANCES, DICT_CEETH_MINT_REQS,
+        DICT_HOTSWAP, DICT_UNLOCK_REQS, KEY_ADMIN, KEY_BRIDGE_PURSE,
     },
     types::{BridgeError, Guardian, HotSwapPatch, UnlockRequest, VaultPosition},
     utils::compute_yield,
@@ -108,6 +108,10 @@ pub fn init(admin: Key, guardians: Vec<Guardian>, threshold: u32, base_apr_bps: 
     let admin_uref = storage::new_uref(admin);
     runtime::put_key(KEY_ADMIN, admin_uref.into());
     write_base_config(threshold, base_apr_bps, false);
+
+    // 创建合约收款钱包
+    let bridge_purse = system::create_purse();
+    runtime::put_key(KEY_BRIDGE_PURSE, bridge_purse.into());
 
     // 保存守护权重
     crate::storage::save_guardians(guardians);
@@ -197,10 +201,30 @@ pub fn approve_unlock(request_id: String) {
     // 达到阈值则直接完成
     if req.approvals_weight >= read_threshold().unwrap_or_revert() as u32 {
         req.finalized = true;
-        // 计息并释放到目标账户
-        let mut pos = accrue_position(&req.recipient);
-        pos.principal = pos.principal.saturating_add(req.amount);
-        save_position(&req.recipient, pos);
+
+        // 结算之前的利息（如果有）
+        let _ = accrue_position(&req.recipient);
+
+        // === 自动转账：从合约钱包转给用户 ===
+        let bridge_purse = get_bridge_purse();
+        let amount_u512 = U512::from(req.amount.as_u128());
+
+        match req.recipient {
+            Key::Account(account_hash) => {
+                system::transfer_from_purse_to_account(
+                    bridge_purse,
+                    account_hash,
+                    amount_u512,
+                    None,
+                )
+                .unwrap_or_revert_with(BridgeError::TransferFailed);
+            }
+            _ => {
+                // 暂时只支持转账给 Account
+                runtime::revert(BridgeError::InvalidAddress);
+            }
+        }
+
         mark_tx_processed(&request_id);
         emit(UnlockFinalized {
             request_id: req.id.clone(),
@@ -361,7 +385,13 @@ pub fn set_ceeth_token_entry(token: Key) {
 }
 
 /// CSPR -> ETH：锁仓 CSPR（计息资产记账），等待对端 mint wCSPR
-pub fn lock_cspr_for_eth(amount: U256, tx_id: String, dst_chain: String, recipient: String) {
+pub fn lock_cspr_for_eth(
+    amount: U256,
+    tx_id: String,
+    dst_chain: String,
+    recipient: String,
+    caller_purse: URef,
+) {
     ensure_not_paused();
     if amount.is_zero() {
         runtime::revert(BridgeError::InvalidAmount);
@@ -370,10 +400,8 @@ pub fn lock_cspr_for_eth(amount: U256, tx_id: String, dst_chain: String, recipie
         runtime::revert(BridgeError::TxAlreadyProcessed);
     }
 
-    let caller_purse = account::get_main_purse();
-
-    // you need purse to transfer CSPR to bridge contract
-    let contract_main_purse = account::get_main_purse();
+    // 获取合约主钱包
+    let contract_main_purse = get_bridge_purse();
 
     system::transfer_from_purse_to_purse(
         caller_purse,
@@ -470,8 +498,16 @@ pub fn approve_ceeth_mint(request_id: String) {
     req.approvals_weight = req.approvals_weight.saturating_add(weight);
 
     if req.approvals_weight >= read_threshold().unwrap_or_revert() as u32 {
-        let token = get_ceeth_token();
+        let token_contract = get_ceeth_token();
+        let token_contract_hash = key_to_contract_hash(token_contract).unwrap_or_revert();
         // cep18_mint(token.clone(), req.recipient, req.amount).unwrap_or_revert();
+
+        let args = runtime_args! {
+            "recipient" => req.recipient.clone(),
+            "amount" => req.amount.clone()
+        };
+
+        runtime::call_contract::<()>(token_contract_hash, "mint", args);
 
         req.finalized = true;
         mark_tx_processed(&request_id);

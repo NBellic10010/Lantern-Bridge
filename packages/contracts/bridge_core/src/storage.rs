@@ -26,10 +26,21 @@ pub const KEY_BASE_APR_BPS: &str = "base_apr_bps";
 pub const KEY_PAUSED: &str = "paused";
 pub const KEY_ACTIVE_PATCH: &str = "active_patch";
 pub const KEY_CEETH_TOKEN: &str = "ceeth_token";
+pub const KEY_BRIDGE_PURSE: &str = "bridge_purse";
 
 // ==========================================
 // 2. 核心工具函数 (Generic Helpers)
 // ==========================================
+
+/// 获取合约的主钱包 (Bridge Purse)
+pub fn get_bridge_purse() -> URef {
+    let key = runtime::get_key(KEY_BRIDGE_PURSE)
+        .ok_or(BridgeError::MissingKey)
+        .unwrap_or_revert();
+    key.into_uref()
+        .ok_or(BridgeError::InvalidKey)
+        .unwrap_or_revert()
+}
 
 /// 获取当前上下文中的 URef (从 NamedKeys 里找)
 fn get_uref(name: &str) -> URef {

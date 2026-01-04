@@ -5,10 +5,13 @@ set -e
 CONTRACT_NAME="bridge_core"
 TARGET_DIR="target/wasm32-unknown-unknown/release"
 
+rm bin/${CONTRACT_NAME}.wasm
+
+RUSTFLAGS="-C target-cpu=mvp"
+
 echo "Building contract..."
 
-# 编译 WASM
-cargo build --release --target wasm32-unknown-unknown
+cargo +nightly-2025-02-04 build --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort
 
 # 检查 wasm-strip 是否存在（用于减小体积）
 if command -v wasm-strip &> /dev/null; then
@@ -24,4 +27,3 @@ mkdir -p bin
 cp "${TARGET_DIR}/${CONTRACT_NAME}.wasm" bin/
 
 echo "Build complete! Wasm file located at: bin/${CONTRACT_NAME}.wasm"
-

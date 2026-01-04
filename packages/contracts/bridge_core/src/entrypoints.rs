@@ -4,7 +4,8 @@ use alloc::{string::String, vec::Vec};
 use casper_contract::contract_api::{runtime, storage};
 use casper_types::{
     contracts::{EntryPoint, EntryPoints},
-    runtime_args, CLType, CLTyped, CLValue, EntryPointAccess, EntryPointType, Key, Parameter, U256,
+    runtime_args, CLType, CLTyped, CLValue, EntryPointAccess, EntryPointType, Key, Parameter, URef,
+    U256,
 };
 
 use crate::{
@@ -43,19 +44,7 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "lock",
-        alloc::vec![
-            Parameter::new("amount", U256::cl_type()),
-            Parameter::new("dst_chain", String::cl_type()),
-            Parameter::new("tx_id", String::cl_type()),
-        ],
-        CLType::Unit,
-        EntryPointAccess::Public,
-        EntryPointType::Called,
-    ));
-
-    entry_points.add_entry_point(EntryPoint::new(
-        "create_unlock_request",
+        "create_unlock_request_entry",
         alloc::vec![
             Parameter::new("request_id", String::cl_type()),
             Parameter::new("recipient", Key::cl_type()),
@@ -69,7 +58,7 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "approve_unlock",
+        "approve_unlock_entry",
         alloc::vec![Parameter::new("request_id", String::cl_type())],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -77,7 +66,7 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "propose_hot_swap",
+        "propose_hot_swap_entry",
         alloc::vec![Parameter::new("patch_hash", String::cl_type())],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -85,7 +74,7 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "approve_hot_swap",
+        "approve_hot_swap_entry",
         alloc::vec![Parameter::new("patch_hash", String::cl_type())],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -93,7 +82,7 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "set_pause",
+        "set_pause_entry",
         alloc::vec![Parameter::new("paused", bool::cl_type())],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -101,7 +90,7 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "update_apr",
+        "update_apr_entry",
         alloc::vec![Parameter::new("new_apr_bps", u32::cl_type())],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -109,7 +98,7 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "transfer_admin",
+        "transfer_admin_entry",
         alloc::vec![Parameter::new("new_admin", Key::cl_type())],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -117,7 +106,7 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "get_position",
+        "get_position_entry",
         alloc::vec![Parameter::new("account", Key::cl_type())],
         <VaultPosition as CLTyped>::cl_type(),
         EntryPointAccess::Public,
@@ -125,7 +114,7 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "set_ceeth_token",
+        "set_ceeth_token_entrypoint",
         alloc::vec![Parameter::new("token", Key::cl_type())],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -133,12 +122,13 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "lock_cspr_for_eth",
+        "lock_cspr_for_eth_entry",
         alloc::vec![
             Parameter::new("amount", U256::cl_type()),
             Parameter::new("tx_id", String::cl_type()),
             Parameter::new("dst_chain", String::cl_type()),
             Parameter::new("recipient", String::cl_type()),
+            Parameter::new("caller_purse", URef::cl_type()),
         ],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -146,7 +136,7 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "create_ceeth_mint_request",
+        "create_ceeth_mint_request_entry",
         alloc::vec![
             Parameter::new("request_id", String::cl_type()),
             Parameter::new("recipient", Key::cl_type()),
@@ -160,7 +150,7 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "approve_ceeth_mint",
+        "approve_ceeth_mint_entry",
         alloc::vec![Parameter::new("request_id", String::cl_type())],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -168,7 +158,7 @@ pub extern "C" fn call() {
     ));
 
     entry_points.add_entry_point(EntryPoint::new(
-        "burn_ceeth_for_eth",
+        "burn_ceeth_for_eth_entry",
         alloc::vec![
             Parameter::new("amount", U256::cl_type()),
             Parameter::new("tx_id", String::cl_type()),
@@ -279,7 +269,8 @@ pub extern "C" fn lock_cspr_for_eth_entry() {
     let tx_id: String = runtime::get_named_arg("tx_id");
     let dst_chain: String = runtime::get_named_arg("dst_chain");
     let recipient: String = runtime::get_named_arg("recipient");
-    lock_cspr_for_eth(amount, tx_id, dst_chain, recipient);
+    let caller_purse: URef = runtime::get_named_arg("caller_purse");
+    lock_cspr_for_eth(amount, tx_id, dst_chain, recipient, caller_purse);
 }
 
 #[no_mangle]
