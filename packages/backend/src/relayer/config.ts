@@ -14,6 +14,14 @@ export const ConfigSchema = z.object({
   // Relayer 私钥 (用于签名交易)
   ETH_PRIVATE_KEY: z.string().min(64), // Hex string without 0x or with 0x
   CSPR_PRIVATE_KEY_PATH: z.string(), // Path to .pem file
+
+  //Contract Address
+  BRIDGE_CONTRACT_HASH_CSPR: z.string(),
+  BRIDGE_CONTRACT_HASH_EVM: z.string(),
+
+  //Gas
+  GAS_CSPR: z.coerce.number().min(0).default(1000000000), //CSPR
+  GAS_EVM: z.coerce.number().min(0).default(1000000000), //ETH
 });
 
 export type RelayerConfig = z.infer<typeof ConfigSchema>;

@@ -2,18 +2,12 @@ import pino from "pino";
 import { BridgeQueue, BridgeMessage } from "./queue";
 import { RelayerConfig, loadConfig } from "./config";
 import { ethers } from "ethers";
-import { EthWatcher, CsprWatcher } from "./watchers";
-import { CasperClient, Keys, DeployUtil, CLValueBuilder, RuntimeArgs } from "casper-js-sdk";
+import { EthWatcher, CsprWatcher } from "./watcher";
+import { CasperClient, Keys } from "casper-js-sdk";
 import fs from "fs";
 import { RedisStateStore } from "./storage/redisStateStore";
-
-// Minimal ABIs
-const VAULT_ABI = [
-  "function release(address payable recipient, uint256 amount, bytes32 burnTx) external",
-];
-const WCSPR_ABI = [
-  "function mint(address to, uint256 amount) external", 
-];
+import { BridgeEventHandler, RelayerContext } from "./handlers/BridgeEventHandler";
+import { EthLockedHandler, WcsprBurnedHandler, CsprLockedHandler, CeEthBurnedHandler } from "./handlers";
 
 /**
  * Relayer 主体：监听两条链、生成 BridgeMessage，执行对端动作
@@ -29,8 +23,8 @@ export class Relayer {
   private readonly seen = new Set<string>(); // 简易去重
   private readonly ethWatcher: EthWatcher;
   private readonly csprWatcher: CsprWatcher;
-
   private readonly stateStore: RedisStateStore;
+  private readonly handlers: BridgeEventHandler[] = [];
 
   constructor(cfg: RelayerConfig) {
     this.cfg = cfg;
@@ -48,6 +42,14 @@ export class Relayer {
 
     const redisUrl = process.env.REDIS_URL ?? "redis://127.0.0.1:6379";
     this.stateStore = new RedisStateStore(redisUrl);
+
+    // Register Handlers
+    this.handlers = [
+        new EthLockedHandler(),
+        new WcsprBurnedHandler(),
+        new CsprLockedHandler(),
+        new CeEthBurnedHandler()
+    ];
 
     this.queue = new BridgeQueue(
       {
@@ -78,87 +80,54 @@ export class Relayer {
    */
   async handleMessage(msg: BridgeMessage) {
     if (this.seen.has(msg.id)) {
-      this.log.debug({ id: msg.id }, "Skip duplicated message");
-      return;
+      this.log.debug({ id: msg.id }, "Skip duplicated message (memory check)");
+      // Don't return here if we want to support retries or state check, but for now simple dup check
     }
     this.seen.add(msg.id);
 
+    // Check persistent state
+    const state = await this.stateStore.get(msg.id);
+    if (state && state.status === "COMPLETED") {
+        this.log.info({ id: msg.id }, "Message already completed, skipping");
+        return;
+    }
+
     this.log.info({ msg }, "Processing bridge message");
+    await this.stateStore.save({ id: msg.id, status: "PROCESSING", updatedAt: Date.now() });
+
+    const context: RelayerContext = {
+        cfg: this.cfg,
+        ethProvider: this.ethProvider,
+        ethWallet: this.ethWallet,
+        csprClient: this.csprClient,
+        csprKeyPair: this.csprKeyPair,
+        stateStore: this.stateStore
+    };
 
     try {
-      if (msg.direction === "ETH_TO_CSPR") {
-        await this.handleEthToCspr(msg);
-      } else if (msg.direction === "CSPR_TO_ETH") {
-        await this.handleCsprToEth(msg);
-      } else {
-        this.log.warn({ msg }, "Unknown message direction");
+      const handler = this.handlers.find(h => h.canHandle(msg));
+      if (!handler) {
+          throw new Error(`No handler found for message: ${JSON.stringify(msg)}`);
       }
-    } catch (e) {
+
+      await handler.handle(msg, context);
+
+      await this.stateStore.save({ 
+          id: msg.id, 
+          status: "COMPLETED", 
+          updatedAt: Date.now() 
+          // txHash usually saved by handler if needed, or handler returns it
+      });
+
+    } catch (e: any) {
       this.log.error({ msg, err: e }, "Failed to process message");
+      await this.stateStore.save({ 
+          id: msg.id, 
+          status: "FAILED", 
+          error: e.message, 
+          updatedAt: Date.now() 
+      });
       throw e; 
-    }
-  }
-
-  private async handleEthToCspr(msg: BridgeMessage) {
-    this.log.info(`[ETH->CSPR] Handling ${msg.id}`);
-    
-    // Determine which function to call on Casper Bridge
-    const entryPoint = msg.asset === "ETH" ? "create_ceeth_mint_request" : "create_unlock_request";
-    
-    // We assume the bridge contract hash is known or in config (TODO: add to config)
-    // For now using a placeholder or assuming it's available via some registry
-    const bridgeContractHash = "contract-hash-placeholder"; 
-    
-    this.log.info(`Calling Casper contract ${bridgeContractHash} entrypoint ${entryPoint}`);
-    
-    // 构造 Casper 交易 (Deploy)
-    // 这里需要根据 entryPoint 构造 RuntimeArgs
-    const args = RuntimeArgs.fromMap({
-        "amount": CLValueBuilder.u256(msg.amount),
-        "recipient": CLValueBuilder.key(msg.recipient), // msg.recipient needs parsing
-        "tx_id": CLValueBuilder.string(msg.srcTxHash),
-        "dst_chain": CLValueBuilder.string("Sepolia"),
-        // ... other args
-    });
-
-    // const deploy = DeployUtil.makeDeploy(
-    //     new DeployUtil.DeployParams(this.csprKeyPair.publicKey, this.cfg.CSPR_CHAIN_ID),
-    //     DeployUtil.ExecutableDeployItem.newStoredContractByHash(
-    //         Buffer.from(bridgeContractHash, 'hex'),
-    //         entryPoint,
-    //         args
-    //     ),
-    //     DeployUtil.standardPayment(10000000000) // 10 CSPR
-    // );
-    
-    // const signedDeploy = DeployUtil.signDeploy(deploy, this.csprKeyPair);
-    // const deployHash = await this.csprClient.putDeploy(signedDeploy);
-    // this.log.info(`Sent Casper deploy: ${deployHash}`);
-  }
-
-  private async handleCsprToEth(msg: BridgeMessage) {
-    this.log.info(`[CSPR->ETH] Handling ${msg.id}`);
-    
-    if (msg.asset === "CSPR") {
-        // Native CSPR Locked -> Mint WrappedCSPR on ETH
-        if (!this.cfg.ETH_WCSRP_ADDRESS) throw new Error("ETH_WCSRP_ADDRESS not configured");
-        const wcspr = new ethers.Contract(this.cfg.ETH_WCSRP_ADDRESS, WCSPR_ABI, this.ethWallet);
-        
-        this.log.info(`Minting WCSPR to ${msg.recipient} amount ${msg.amount}`);
-        const tx = await wcspr.mint(msg.recipient, BigInt(msg.amount));
-        await tx.wait();
-        this.log.info(`Minted WCSPR: ${tx.hash}`);
-    } else if (msg.asset === "ceETH") {
-        // ceETH Burned -> Release ETH
-        if (!this.cfg.ETH_VAULT_ADDRESS) throw new Error("ETH_VAULT_ADDRESS not configured");
-        const vault = new ethers.Contract(this.cfg.ETH_VAULT_ADDRESS, VAULT_ABI, this.ethWallet);
-        
-        const burnTxHash = "0x" + msg.srcTxHash; // Ensure format
-        
-        this.log.info(`Releasing ETH to ${msg.recipient} amount ${msg.amount}`);
-        const tx = await vault.release(msg.recipient, BigInt(msg.amount), burnTxHash);
-        await tx.wait();
-        this.log.info(`Released ETH: ${tx.hash}`);
     }
   }
 

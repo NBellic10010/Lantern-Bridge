@@ -7,7 +7,7 @@ import IORedis from "ioredis";
  */
 export interface BridgeMessage {
   id: string; // messageId，建议 hash(srcChainId+txHash+logIndex)
-  direction: "CSPR_TO_ETH" | "ETH_TO_CSPR";
+  direction: "CSPR_TO_ETH" | "ETH_TO_CSPR" | "CSPR_TO_CSPR";
   srcChainId: string;
   dstChainId: string;
   srcTxHash: string;
