@@ -1,12 +1,7 @@
 import { initTRPC } from '@trpc/server';
-import * as trpcExpress from '@trpc/server/adapters/express';
-import { z } from 'zod'; // 用于参数验证
-import { PrismaClient } from '@prisma/client';
+import { Context } from './context';
 
-const prisma = new PrismaClient();
+const t = initTRPC.context<Context>().create();
 
-const t = initTRPC.create();
-
-export const appRouter = t.router({
-    
-})
+export const router = t.router;
+export const publicProcedure = t.procedure;
