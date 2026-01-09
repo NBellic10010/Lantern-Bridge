@@ -1,0 +1,51 @@
+# Lantern Bridge Events Reference
+
+## 1. Ethereum (EVM) Contracts
+**Source:** `packages/contracts/evm/src/Bridge.sol`
+
+| Event Name | Arguments (Type & Name) | Description |
+| :--- | :--- | :--- |
+| **Locked** | `bytes32 indexed depositId`<br>`address indexed user`<br>`address token`<br>`uint256 amount`<br>`string dstChain`<br>`string dstAccount`<br>`uint8 strategy` | User locks asset (ETH/ERC20) on Ethereum to bridge to destination. |
+| **Released** | `bytes32 indexed depositId`<br>`address indexed user`<br>`uint256 amount` | Asset unlocked/released to user on Ethereum (inbound completion). |
+| **MintedwCSPR** | `bytes32 indexed reqId`<br>`address indexed to`<br>`uint256 amount` | wCSPR minted on Ethereum (bridged from Casper). |
+| **BurnedwCSPR** | `bytes32 indexed reqId`<br>`address indexed from`<br>`uint256 amount`<br>`string dstAccount` | User burns wCSPR to bridge back to Casper. |
+| **StrategyUpdated** | `Strategy indexed strategy`<br>`address adapter` | Admin updates DeFi strategy adapter address. |
+
+---
+
+## 2. Casper (Rust) Contracts
+**Source:** `packages/contracts/bridge_core/src/events.rs`
+*Note: All Casper events include `event_type: u8` as the last field.*
+
+| Event Name | Arguments (Rust Type) | Description |
+| :--- | :--- | :--- |
+| **UnlockRequested** | `request_id: String`<br>`recipient: Key`<br>`amount: U256`<br>`src_chain: String`<br>`dst_chain: String` | Relayer requests unlock on Casper (after observing lock on ETH). | 
+| **UnlockFinalized** | `request_id: String`<br>`recipient: Key`<br>`amount: U256` | Multi-sig threshold reached, funds released to user. |
+| **CsprLockedForTarget** | `sender: Key`<br>`amount: U256`<br>`dst_chain: String`<br>`tx_id: String`<br>`recipient: String` | User locks CSPR to bridge to target (ETH). |
+| **CeETHMinted** | `recipient: Key`<br>`amount: U256`<br>`tx_id: String` | ceETH minted on Casper (bridged from ETH). |
+| **CeETHBurned** | `eth_owner: String`<br>`amount: U256`<br>`tx_id: String` | User burns ceETH on Casper to bridge back to ETH. |
+| **HotSwapProposed** | `patch_hash: String`<br>`proposer: Key` | Admin proposes contract upgrade. |
+| **HotSwapActivated** | `patch_hash: String` | Upgrade approved and activated. |
+| **PauseChanged** | `paused: bool` | Contract paused/unpaused. |
+| **YieldAccrued** | `account: Key`<br>`principal_after: U256` | Yield/Interest accrued for user position. |
+
+---
+
+## 3. Relayer Actions Mapping
+
+### ETH -> Casper (Inbound)
+1. Listen for **ETH: Locked**
+   -> Call **Casper: create_ceeth_mint_request** (if ETH/ERC20)
+   -> Then **Casper: approve_ceeth_mint** (Multi-sig)
+
+2. Listen for **ETH: BurnedwCSPR**
+   -> Call **Casper: create_unlock_request** (if unlocking CSPR)
+   -> Then **Casper: approve_unlock** (Multi-sig)
+
+### Casper -> ETH (Outbound)
+1. Listen for **Casper: CsprLockedForTarget**
+   -> Call **ETH: Bridge.mintwCSPR** (Multi-sig/Admin)
+
+2. Listen for **Casper: CeETHBurned**
+   -> Call **ETH: Bridge.release** (Multi-sig/Admin)
+

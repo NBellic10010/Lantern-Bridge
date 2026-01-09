@@ -1,0 +1,519 @@
+{
+    "json": {
+      "api_version": "2.0.0",
+      "transaction": {
+        "Version1": {
+          "hash": "e994b2d7c162e067e830141b8c549a34c8b9c6f1396fb19d7d231b1e0caa1dc5",
+          "payload": {
+            "ttl": "30m",
+            "fields": {
+              "args": {
+                "Named": [
+                  [
+                    "block_number",
+                    {
+                      "bytes": "849c980000000000",
+                      "parsed": 10001540,
+                      "cl_type": "U64"
+                    }
+                  ],
+                  [
+                    "block_hash",
+                    {
+                      "bytes": "3bb1563c1bc703b62bbf3362d3ceaf814f4b92614b56d6983d098cca557ce871",
+                      "parsed": "3bb1563c1bc703b62bbf3362d3ceaf814f4b92614b56d6983d098cca557ce871",
+                      "cl_type": {
+                        "ByteArray": 32
+                      }
+                    }
+                  ],
+                  [
+                    "state_root",
+                    {
+                      "bytes": "79080544f75704be95665f758e4e088adf5ca4b43be288e053e22e09d2018c8b",
+                      "parsed": "79080544f75704be95665f758e4e088adf5ca4b43be288e053e22e09d2018c8b",
+                      "cl_type": {
+                        "ByteArray": 32
+                      }
+                    }
+                  ],
+                  [
+                    "receipts_root",
+                    {
+                      "bytes": "46bfb163e5cdfadd7f6e452ee23bc8f81f81c9bee8e1450e8079625a0cd5cec5",
+                      "parsed": "46bfb163e5cdfadd7f6e452ee23bc8f81f81c9bee8e1450e8079625a0cd5cec5",
+                      "cl_type": {
+                        "ByteArray": 32
+                      }
+                    }
+                  ],
+                  [
+                    "signatures",
+                    {
+                      "bytes": "03000000410000006e3fa106929ed8bd2b05281657d60e7a4ddcf0459dcb3f79478144f5d086697e4d59762978841dd171dbcc53bc69926214058a46d1d0e5c3c7d44d0f2303f2411c41000000db42a5748d71f2ae8a6741441ee4c35f333e6dfd933255fea342b55ed634ffed7a81bda96794dbdccf7479dffc9e3af61b6c17907070fad4add8c2a2c0c84bee1b4100000090f79adb5c4e138f706da6c2e60a709f4ba683baa3ad450e5b483be962ca37ab1a1402ad4167116ef2f32cb872efd7adb7aa4013d06ceefa94fbe1dac66f60c91b",
+                      "parsed": [
+                        [
+                          110,
+                          63,
+                          161,
+                          6,
+                          146,
+                          158,
+                          216,
+                          189,
+                          43,
+                          5,
+                          40,
+                          22,
+                          87,
+                          214,
+                          14,
+                          122,
+                          77,
+                          220,
+                          240,
+                          69,
+                          157,
+                          203,
+                          63,
+                          121,
+                          71,
+                          129,
+                          68,
+                          245,
+                          208,
+                          134,
+                          105,
+                          126,
+                          77,
+                          89,
+                          118,
+                          41,
+                          120,
+                          132,
+                          29,
+                          209,
+                          113,
+                          219,
+                          204,
+                          83,
+                          188,
+                          105,
+                          146,
+                          98,
+                          20,
+                          5,
+                          138,
+                          70,
+                          209,
+                          208,
+                          229,
+                          195,
+                          199,
+                          212,
+                          77,
+                          15,
+                          35,
+                          3,
+                          242,
+                          65,
+                          28
+                        ],
+                        [
+                          219,
+                          66,
+                          165,
+                          116,
+                          141,
+                          113,
+                          242,
+                          174,
+                          138,
+                          103,
+                          65,
+                          68,
+                          30,
+                          228,
+                          195,
+                          95,
+                          51,
+                          62,
+                          109,
+                          253,
+                          147,
+                          50,
+                          85,
+                          254,
+                          163,
+                          66,
+                          181,
+                          94,
+                          214,
+                          52,
+                          255,
+                          237,
+                          122,
+                          129,
+                          189,
+                          169,
+                          103,
+                          148,
+                          219,
+                          220,
+                          207,
+                          116,
+                          121,
+                          223,
+                          252,
+                          158,
+                          58,
+                          246,
+                          27,
+                          108,
+                          23,
+                          144,
+                          112,
+                          112,
+                          250,
+                          212,
+                          173,
+                          216,
+                          194,
+                          162,
+                          192,
+                          200,
+                          75,
+                          238,
+                          27
+                        ],
+                        [
+                          144,
+                          247,
+                          154,
+                          219,
+                          92,
+                          78,
+                          19,
+                          143,
+                          112,
+                          109,
+                          166,
+                          194,
+                          230,
+                          10,
+                          112,
+                          159,
+                          75,
+                          166,
+                          131,
+                          186,
+                          163,
+                          173,
+                          69,
+                          14,
+                          91,
+                          72,
+                          59,
+                          233,
+                          98,
+                          202,
+                          55,
+                          171,
+                          26,
+                          20,
+                          2,
+                          173,
+                          65,
+                          103,
+                          17,
+                          110,
+                          242,
+                          243,
+                          44,
+                          184,
+                          114,
+                          239,
+                          215,
+                          173,
+                          183,
+                          170,
+                          64,
+                          19,
+                          208,
+                          108,
+                          238,
+                          250,
+                          148,
+                          251,
+                          225,
+                          218,
+                          198,
+                          111,
+                          96,
+                          201,
+                          27
+                        ]
+                      ],
+                      "cl_type": {
+                        "List": {
+                          "List": "U8"
+                        }
+                      }
+                    }
+                  ]
+                ]
+              },
+              "target": {
+                "Stored": {
+                  "id": {
+                    "ByPackageHash": {
+                      "addr": "84b61e94bb31aa6ea1b0f343b2c17cabc68af0a0aae9ebc14d8358c68a2d2372",
+                      "version": null
+                    }
+                  },
+                  "runtime": "VmCasperV1"
+                }
+              },
+              "scheduling": "Standard",
+              "entry_point": {
+                "Custom": "submit_block_header_with_signatures"
+              }
+            },
+            "timestamp": "2026-01-08T08:01:39.468Z",
+            "chain_name": "casper-test",
+            "pricing_mode": {
+              "PaymentLimited": {
+                "payment_amount": 21000000000,
+                "standard_payment": true,
+                "gas_price_tolerance": 1
+              }
+            },
+            "initiator_addr": {
+              "PublicKey": "01e2614eb93fb15758ae9e5b47349920c82d4f6c1aeb40b55f7dd6c862f5796687"
+            }
+          },
+          "approvals": [
+            {
+              "signer": "01e2614eb93fb15758ae9e5b47349920c82d4f6c1aeb40b55f7dd6c862f5796687",
+              "signature": "011a7a942d77ca8e6902a2b013e3fa8b81d3b54e2e74ec82ae1072da6556b14003714ed8f968d89e47a73dfeaec9f7d2c1a7325614f3751e4546cc77cfd971de01"
+            }
+          ]
+        }
+      },
+      "execution_info": {
+        "block_hash": "e67b466b4922d34029a17ce43605b3f50c32f44e890e2766c78990d330889fb4",
+        "block_height": 6480512,
+        "execution_result": {
+          "Version2": {
+            "cost": "21000000000",
+            "limit": "21000000000",
+            "refund": "2869529569",
+            "effects": [
+              {
+                "key": "balance-hold-0117883865e0085a170a5ec00503d23800f94863583b62a7587ecea00848a987e9bf40a09c9b010000",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "050092b2e304",
+                      "parsed": "21000000000",
+                      "cl_type": "U512"
+                    }
+                  }
+                }
+              },
+              {
+                "key": "hash-84b61e94bb31aa6ea1b0f343b2c17cabc68af0a0aae9ebc14d8358c68a2d2372",
+                "kind": "Identity"
+              },
+              {
+                "key": "hash-14b0458e3a546e2b6c0c8ab20dbf6d4a0a0d243197547896c3a73aed5c6fedd3",
+                "kind": "Identity"
+              },
+              {
+                "key": "hash-15c178f458658de8f700c80fe9e163ad4474a332dacfebdf2959cd8dc641ef83",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-76f1d7a840972daaf843b36665de794006d997f90e328b52817adfe7d761b2f7",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-3876b22f4c597f6fc2b3b615e9ff5de11dbf2b29f6583a159a82563dc6e84922",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-3b9837fb119677f2ab4aa3dba0a1d599344693791de5685b74dfd837dc5933b0",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-b2e32a1369e520b99ae8cfdf210823d72b734cee67b54e9bdf8ecc9f5bc78fa0",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-8dbd24f18c010450685e873ecf06b0eea61e0b7b223928d6a4f0fac46294f636",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-09ffe804d9a53dd093c454586428d8ebe0ea17f1e08fbd5bc5b2d4f8698cb55c",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-5ee6d2a0c66c3e72a723311e6014dac3dabbded64b478eb5deef2aaada3f0fc4",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-ea0835ada72277d4d334137e1ca4d689d59452e4cb8ff4a691a22afd2ac094b0",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-0f8928e6a39d436bb43389f3523194e5c54e3ccf5868dabb8fd47b06a857f8f6",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-c18ce8e5dc0930c412f37830fe7fec0eadf4492fb4d18ba0cb264f3a67799755",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-a163d101db0829929ea657a8ff48191fb9325573cab9049f441f06ef8ab75382",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-4742b3c9e57562d105b9502f8f98bd7b7e291c4f9ccc05da93221eee8043b832",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-9722af4e70665de2ab18f6a4b614b418985fc0f8d6d03a005b99ced5cd569ac5",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-7ee554602f34e3a5867b52c6e8bdcb7b781749af20dc1bef0ac616bbeb3652a4",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-c55fd0fb44587c39d92d2884ffa3fe308a69b1ee76fea0e4d95e8244500030e6",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "24000000200000003bb1563c1bc703b62bbf3362d3ceaf814f4b92614b56d6983d098cca557ce8710e0320000000ea4f887ef58f6a58185459054004f7991aaf386573d36eed3ae415c8401b16314000000039616236313733346434316637346231656537616635663536653831623830353137323437386236666532313331613762386636383761353062623630623162",
+                      "parsed": null,
+                      "cl_type": "Any"
+                    }
+                  }
+                }
+              },
+              {
+                "key": "dictionary-35bed9a84283c43d3a4eb49b346843a962ce2cdb4a38d73f3b3bf93c772854e1",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "240000002000000079080544f75704be95665f758e4e088adf5ca4b43be288e053e22e09d2018c8b0e0320000000ea4f887ef58f6a58185459054004f7991aaf386573d36eed3ae415c8401b16314000000039626365663063643261633161626161343861653539306665366164636232613666613966613066333539303531636261656437663163303761383063623136",
+                      "parsed": null,
+                      "cl_type": "Any"
+                    }
+                  }
+                }
+              },
+              {
+                "key": "dictionary-88a418824c904cf8aed54876e402e9d561e1406d0d776bd1926a97f5bba5a6ff",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "240000002000000046bfb163e5cdfadd7f6e452ee23bc8f81f81c9bee8e1450e8079625a0cd5cec50e0320000000ea4f887ef58f6a58185459054004f7991aaf386573d36eed3ae415c8401b16314000000036333836323133353061623039333534396338313738353237643337643534636438663436353366326133636562363166323530313239333833346261313631",
+                      "parsed": null,
+                      "cl_type": "Any"
+                    }
+                  }
+                }
+              },
+              {
+                "key": "dictionary-a4f3b65b65cb67fd3da2d6d7ecead385be7e1642118303a48389e207c0752082",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-a4f3b65b65cb67fd3da2d6d7ecead385be7e1642118303a48389e207c0752082",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "0c00000008000000849c9800000000000e0320000000ea4f887ef58f6a58185459054004f7991aaf386573d36eed3ae415c8401b16314000000066356539646633306139613963626661333366396639616564326362323664356537303532636533653662393166623135313033663234326663336635393361",
+                      "parsed": null,
+                      "cl_type": "Any"
+                    }
+                  }
+                }
+              },
+              {
+                "key": "uref-4e493c4c51858f4809ade9de78699bd768a86019a22b979498012d0651dad039-000",
+                "kind": "Identity"
+              },
+              {
+                "key": "dictionary-706892047aa304571711a461e371e643f35e67babd8f10a5ebbb8d0f2c1f17db",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "6b000000670000001a0000006576656e745f426c6f636b4865616465725375626d6974746564849c9800000000003bb1563c1bc703b62bbf3362d3ceaf814f4b92614b56d6983d098cca557ce871009393fb979bbe817d99b3038236b7f0254d2c6d1e52da43415b5dad39d247c9180e0320000000d290a6a64a149a39f0f98ad726b4cc374f4a11a2a826b2888ca601821b32c8e10400000032383134",
+                      "parsed": null,
+                      "cl_type": "Any"
+                    }
+                  }
+                }
+              },
+              {
+                "key": "uref-4e493c4c51858f4809ade9de78699bd768a86019a22b979498012d0651dad039-000",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "ff0a0000",
+                      "parsed": 2815,
+                      "cl_type": "U32"
+                    }
+                  }
+                }
+              },
+              {
+                "key": "balance-hold-0117883865e0085a170a5ec00503d23800f94863583b62a7587ecea00848a987e9bf40a09c9b010000",
+                "kind": {
+                  "Prune": "balance-hold-0117883865e0085a170a5ec00503d23800f94863583b62a7587ecea00848a987e9bf40a09c9b010000"
+                }
+              },
+              {
+                "key": "balance-17883865e0085a170a5ec00503d23800f94863583b62a7587ecea00848a987e9",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "0692f0a4d1ee7e",
+                      "parsed": "139564184563858",
+                      "cl_type": "U512"
+                    }
+                  }
+                }
+              },
+              {
+                "key": "uref-5d7b1b23197cda53dec593caf30836a5740afa2279b356fae74bf1bdc2b2e725-000",
+                "kind": "Identity"
+              },
+              {
+                "key": "uref-5d7b1b23197cda53dec593caf30836a5740afa2279b356fae74bf1bdc2b2e725-000",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "0871d4ba4babfc0e8c",
+                      "parsed": "10092281627624002673",
+                      "cl_type": "U512"
+                    }
+                  }
+                }
+              }
+            ],
+            "consumed": "17173960574",
+            "initiator": {
+              "PublicKey": "01e2614eb93fb15758ae9e5b47349920c82d4f6c1aeb40b55f7dd6c862f5796687"
+            },
+            "transfers": [],
+            "current_price": 1,
+            "error_message": null,
+            "size_estimate": 971
+          }
+        }
+      }
+    }
+  }

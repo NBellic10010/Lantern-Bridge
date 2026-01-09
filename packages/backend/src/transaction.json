@@ -1,0 +1,218 @@
+{
+    "json": {
+      "api_version": "2.0.0",
+      "transaction": {
+        "Version1": {
+          "hash": "6737dafe8724515e733b3b5e26eaf20b112da4c87479d96dcb5205eac75ffa57",
+          "payload": {
+            "ttl": "30m",
+            "fields": {
+              "args": {
+                "Named": [
+                  [
+                    "target",
+                    {
+                      "bytes": "02034aff7061d699da6a13397e9fa51f2487ee4effb1eec85bfd31f3ce372b3b76ef",
+                      "parsed": "02034aff7061d699da6a13397e9fa51f2487ee4effb1eec85bfd31f3ce372b3b76ef",
+                      "cl_type": "PublicKey"
+                    }
+                  ],
+                  [
+                    "amount",
+                    {
+                      "bytes": "050010a5d4e8",
+                      "parsed": "1000000000000",
+                      "cl_type": "U512"
+                    }
+                  ],
+                  [
+                    "id",
+                    {
+                      "bytes": "0106ae989c9b010000",
+                      "parsed": 1767858810374,
+                      "cl_type": {
+                        "Option": "U64"
+                      }
+                    }
+                  ]
+                ]
+              },
+              "target": "Native",
+              "scheduling": "Standard",
+              "entry_point": "Transfer"
+            },
+            "timestamp": "2026-01-08T07:53:31.677Z",
+            "chain_name": "casper-test",
+            "pricing_mode": {
+              "PaymentLimited": {
+                "payment_amount": 100000000,
+                "standard_payment": true,
+                "gas_price_tolerance": 3
+              }
+            },
+            "initiator_addr": {
+              "PublicKey": "0203a49c0192eb64510aa4cb8e166693a397c3ce42507e56a82f91baa6593b663882"
+            }
+          },
+          "approvals": [
+            {
+              "signer": "0203a49c0192eb64510aa4cb8e166693a397c3ce42507e56a82f91baa6593b663882",
+              "signature": "02930021c6669b73cf527f55e6f6285b8669e4e0e9fbd12786518407b694ec526e562977fed3f672839c116605a6a9ee318071aef5b973f6d8249717433a9a1ae7"
+            }
+          ]
+        }
+      },
+      "execution_info": {
+        "block_hash": "8f273e5780ad51a6bac8c955d0755bcff17f4023cce6aa59e23acb0ab15fbc65",
+        "block_height": 6480451,
+        "execution_result": {
+          "Version2": {
+            "cost": "100000000",
+            "limit": "100000000",
+            "refund": "0",
+            "effects": [
+              {
+                "key": "balance-hold-0171f56b5ac7d4e470ca223985478905a26322beb7e241eef48850b7d6024b14b534ce989c9b010000",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "0400e1f505",
+                      "parsed": "100000000",
+                      "cl_type": "U512"
+                    }
+                  }
+                }
+              },
+              {
+                "key": "uref-f98800662bbcd9bb7b6df03245a6e95c89899b1582f779989d15587fa4de7681-000",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "",
+                      "parsed": null,
+                      "cl_type": "Unit"
+                    }
+                  }
+                }
+              },
+              {
+                "key": "balance-f98800662bbcd9bb7b6df03245a6e95c89899b1582f779989d15587fa4de7681",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "00",
+                      "parsed": "0",
+                      "cl_type": "U512"
+                    }
+                  }
+                }
+              },
+              {
+                "key": "account-hash-5f96219eb96e1b3ff29fac7c667a78fc86c9b0fd88d6eaa56f328e04b8422bfa",
+                "kind": {
+                  "Write": {
+                    "Account": {
+                      "main_purse": "uref-f98800662bbcd9bb7b6df03245a6e95c89899b1582f779989d15587fa4de7681-007",
+                      "named_keys": [],
+                      "account_hash": "account-hash-5f96219eb96e1b3ff29fac7c667a78fc86c9b0fd88d6eaa56f328e04b8422bfa",
+                      "associated_keys": [
+                        {
+                          "weight": 1,
+                          "account_hash": "account-hash-5f96219eb96e1b3ff29fac7c667a78fc86c9b0fd88d6eaa56f328e04b8422bfa"
+                        }
+                      ],
+                      "action_thresholds": {
+                        "deployment": 1,
+                        "key_management": 1
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "key": "balance-hold-0171f56b5ac7d4e470ca223985478905a26322beb7e241eef48850b7d6024b14b534ce989c9b010000",
+                "kind": "Identity"
+              },
+              {
+                "key": "balance-71f56b5ac7d4e470ca223985478905a26322beb7e241eef48850b7d6024b14b5",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "06ce416e31ef01",
+                      "parsed": "2126838120910",
+                      "cl_type": "U512"
+                    }
+                  }
+                }
+              },
+              {
+                "key": "balance-f98800662bbcd9bb7b6df03245a6e95c89899b1582f779989d15587fa4de7681",
+                "kind": {
+                  "AddUInt512": "1000000000000"
+                }
+              },
+              {
+                "key": "balance-hold-0171f56b5ac7d4e470ca223985478905a26322beb7e241eef48850b7d6024b14b534ce989c9b010000",
+                "kind": {
+                  "Prune": "balance-hold-0171f56b5ac7d4e470ca223985478905a26322beb7e241eef48850b7d6024b14b534ce989c9b010000"
+                }
+              },
+              {
+                "key": "balance-71f56b5ac7d4e470ca223985478905a26322beb7e241eef48850b7d6024b14b5",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "06ce60782bef01",
+                      "parsed": "2126738120910",
+                      "cl_type": "U512"
+                    }
+                  }
+                }
+              },
+              {
+                "key": "uref-5d7b1b23197cda53dec593caf30836a5740afa2279b356fae74bf1bdc2b2e725-000",
+                "kind": "Identity"
+              },
+              {
+                "key": "uref-5d7b1b23197cda53dec593caf30836a5740afa2279b356fae74bf1bdc2b2e725-000",
+                "kind": {
+                  "Write": {
+                    "CLValue": {
+                      "bytes": "08b26330bdb3fc0e8c",
+                      "parsed": "10092281663887270834",
+                      "cl_type": "U512"
+                    }
+                  }
+                }
+              }
+            ],
+            "consumed": "100000000",
+            "initiator": {
+              "PublicKey": "0203a49c0192eb64510aa4cb8e166693a397c3ce42507e56a82f91baa6593b663882"
+            },
+            "transfers": [
+              {
+                "Version2": {
+                  "id": 1767858810374,
+                  "to": "account-hash-5f96219eb96e1b3ff29fac7c667a78fc86c9b0fd88d6eaa56f328e04b8422bfa",
+                  "gas": "100000000",
+                  "from": {
+                    "AccountHash": "account-hash-49f81be0caeecef1c0dd2ce32e914c5905c67cb8035ddc9c7a054d26f1e77183"
+                  },
+                  "amount": "1000000000000",
+                  "source": "uref-71f56b5ac7d4e470ca223985478905a26322beb7e241eef48850b7d6024b14b5-007",
+                  "target": "uref-f98800662bbcd9bb7b6df03245a6e95c89899b1582f779989d15587fa4de7681-004",
+                  "transaction_hash": {
+                    "Version1": "6737dafe8724515e733b3b5e26eaf20b112da4c87479d96dcb5205eac75ffa57"
+                  }
+                }
+              }
+            ],
+            "current_price": 1,
+            "error_message": null,
+            "size_estimate": 503
+          }
+        }
+      }
+    }
+  }

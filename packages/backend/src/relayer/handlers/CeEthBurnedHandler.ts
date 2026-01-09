@@ -1,0 +1,42 @@
+import { BridgeMessage } from "../queue";
+import { BridgeEventHandler, RelayerContext } from "./BridgeEventHandler";
+import { ethers } from "ethers";
+import pino from "pino";
+
+const log = pino({ name: "handler:ceeth-burned" });
+
+const VAULT_ABI = [
+  "function release(address payable recipient, uint256 amount, bytes32 burnTx) external",
+];
+
+export class CeEthBurnedHandler implements BridgeEventHandler {
+  canHandle(msg: BridgeMessage): boolean {
+    return msg.direction === "CSPR_TO_ETH" && msg.asset === "ceETH";
+  }
+
+  async handle(msg: BridgeMessage, ctx: RelayerContext): Promise<void> {
+    log.info(`Handling ceETH Burn event: ${msg.id}`);
+
+    if (!ctx.cfg.ETH_VAULT_ADDRESS) {
+        throw new Error("ETH_VAULT_ADDRESS not configured");
+    }
+
+    const vault = new ethers.Contract(ctx.cfg.ETH_VAULT_ADDRESS, VAULT_ABI, ctx.ethWallet);
+    const burnTxHash = "0x" + msg.srcTxHash; // Ensure format match if needed
+
+    log.info(`Releasing ETH to ${msg.recipient} amount ${msg.amount}`);
+    
+    const tx = await vault.release(msg.recipient, BigInt(msg.amount), burnTxHash);
+    await tx.wait();
+    
+    log.info(`Released ETH: ${tx.hash}`);
+
+    await ctx.stateStore.save({
+        id: msg.id,
+        status: "COMPLETED",
+        txHash: tx.hash,
+        updatedAt: Date.now()
+    });
+  }
+}
+
