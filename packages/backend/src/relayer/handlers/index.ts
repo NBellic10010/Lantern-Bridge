@@ -6,3 +6,4 @@ export * from "./CeEthBurnedHandler";
 export * from "./UnlockRequestedHandler";
 export * from "./UnlockFinalizedHandler";
 export * from "./CeEthMintedHandler";
+export * from "./CeEthMintRequestedHandler";

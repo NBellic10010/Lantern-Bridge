@@ -80,6 +80,30 @@ export class UnlockFinalizedParser implements EventParser<CsprEventContext> {
   }
 }
 
+// Event Type 11: CeETHMintRequested (新增)
+export class CeEthMintRequestedParser implements EventParser<CsprEventContext> {
+  readonly eventType = 11;
+
+  parse(ctx: CsprEventContext): BridgeMessage | null {
+    // Rust struct: { request_id, recipient, amount, src_chain, dst_chain, event_type }
+    const { request_id, amount, recipient, src_chain, dst_chain } = ctx.data;
+
+    return {
+      id: request_id,
+      requestId: request_id,
+      direction: "ETH_TO_CSPR",
+      srcChainId: src_chain || "ETH",
+      dstChainId: dst_chain || "CSPR",
+      srcTxHash: ctx.deployHash,
+      sender: "relayer",
+      recipient: recipient,
+      asset: "ceETH", // 标识为 ceETH 请求
+      amount: amount.toString(),
+      raw: ctx.data
+    };
+  }
+}
+
 // Event Type 9: CeETHMinted
 export class CeEthMintedParser implements EventParser<CsprEventContext> {
   readonly eventType = 9;

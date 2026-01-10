@@ -5,6 +5,8 @@ import { Contracts, RuntimeArgs, CLValueBuilder } from "casper-js-sdk";
 
 const log = pino({ name: "handler:unlock-requested" });
 
+//用户在CSPR链上发起解锁请求
+//relayer 在CSPR链上监听并创建deploy，调用approve_unlock_entry entry point
 export class UnlockRequestedHandler implements BridgeEventHandler {
   canHandle(msg: BridgeMessage): boolean {
     return msg.direction === "ETH_TO_CSPR" && msg.asset === "CSPR" && msg.sender === "relayer";

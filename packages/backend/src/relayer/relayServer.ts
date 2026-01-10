@@ -7,7 +7,16 @@ import { CasperClient, Keys } from "casper-js-sdk";
 import fs from "fs";
 import { RedisStateStore } from "./storage/redisStateStore";
 import { BridgeEventHandler, RelayerContext } from "./handlers/BridgeEventHandler";
-import { EthLockedHandler, WcsprBurnedHandler, CsprLockedHandler, CeEthBurnedHandler } from "./handlers";
+import { 
+  EthLockedHandler, 
+  WcsprBurnedHandler, 
+  CsprLockedHandler, 
+  CeEthBurnedHandler,
+  UnlockRequestedHandler,
+  UnlockFinalizedHandler,
+  CeEthMintedHandler,
+  CeEthMintRequestedHandler
+} from "./handlers";
 
 /**
  * Relayer 主体：监听两条链、生成 BridgeMessage，执行对端动作
@@ -44,11 +53,16 @@ export class Relayer {
     this.stateStore = new RedisStateStore(redisUrl);
 
     // Register Handlers
+    // 注意：注册顺序可能重要，如果 msg 匹配多个 handler（虽然目前逻辑是唯一的）
     this.handlers = [
         new EthLockedHandler(),
         new WcsprBurnedHandler(),
         new CsprLockedHandler(),
-        new CeEthBurnedHandler()
+        new CeEthBurnedHandler(),
+        new UnlockRequestedHandler(),
+        new UnlockFinalizedHandler(),
+        new CeEthMintedHandler(),
+        new CeEthMintRequestedHandler() // 新增
     ];
 
     this.queue = new BridgeQueue(
@@ -62,9 +76,13 @@ export class Relayer {
       (msg) => this.handleMessage(msg)
     );
     
+    // Watchers 初始化
+    // EthWatcher 和 CsprWatcher 都会自动将解析出的事件加入到 this.queue 中
+    // EthWatcher 使用回调 enqueue
     this.ethWatcher = new EthWatcher(this.ethProvider, this.cfg, (msg) =>
       this.enqueue(msg)
     );
+    // CsprWatcher 内部持有 queue 引用
     this.csprWatcher = new CsprWatcher(this.csprClient, this.cfg, this.queue);
   }
 
@@ -81,7 +99,7 @@ export class Relayer {
   async handleMessage(msg: BridgeMessage) {
     if (this.seen.has(msg.id)) {
       this.log.debug({ id: msg.id }, "Skip duplicated message (memory check)");
-      // Don't return here if we want to support retries or state check, but for now simple dup check
+      // 继续执行，因为可能是重启后重新处理，或者不同事件ID
     }
     this.seen.add(msg.id);
 
@@ -93,6 +111,8 @@ export class Relayer {
     }
 
     this.log.info({ msg }, "Processing bridge message");
+    
+    // 如果状态是 FAILED，我们可能是在重试，所以更新为 PROCESSING
     await this.stateStore.save({ id: msg.id, status: "PROCESSING", updatedAt: Date.now() });
 
     const context: RelayerContext = {
@@ -107,17 +127,39 @@ export class Relayer {
     try {
       const handler = this.handlers.find(h => h.canHandle(msg));
       if (!handler) {
-          throw new Error(`No handler found for message: ${JSON.stringify(msg)}`);
+          // 如果没有 handler，可能是无关事件，或者不需要处理
+          this.log.warn(`No handler found for message: ${msg.direction} - ${msg.asset}`);
+          return;
       }
 
       await handler.handle(msg, context);
 
-      await this.stateStore.save({ 
-          id: msg.id, 
-          status: "COMPLETED", 
-          updatedAt: Date.now() 
-          // txHash usually saved by handler if needed, or handler returns it
-      });
+      // 注意：部分 Handler（如 UnlockRequested）可能不会立即标记为 COMPLETED，
+      // 而是等待后续事件（UnlockFinalized）。
+      // 所以我们这里再次检查状态，或者让 Handler 自己负责 update state。
+      // 为简单起见，如果 Handler 没有抛出错误，且不是那种“中间状态”的 Handler，我们可以在这里标记完成。
+      // 但更稳妥的是让 Handler 显式管理状态。
+      
+      // 当前所有 Handler 实现中：
+      // - EthLocked: 成功后 COMPLETED
+      // - WcsprBurned: 成功后 COMPLETED (deploy sent) -> 其实应该是 PENDING/PROCESSING 直到 Cspr 端的 UnlockRequested?
+      //   不对，WcsprBurned 只是触发 create_unlock，这个动作完成了就是 COMPLETED。后续流程由 UnlockRequested 触发。
+      // - UnlockRequested: 成功后 PROCESSING (approved, waiting for finalization)
+      // - UnlockFinalized: 成功后 COMPLETED
+      // - CeEthMintRequested: 成功后 PROCESSING
+      // - CeEthMinted: 成功后 COMPLETED
+      
+      // 因此，我们**不应该**在这里强制覆盖为 COMPLETED，除非我们确定 Handler 没做。
+      // 实际上，为了保险，最好让 Handler 自己决定。
+      // 或者我们可以读取当前状态，如果仍是 PROCESSING 且 Handler 没报错，可能意味着它是异步流程的一部分。
+      
+      // 重新读取状态检查是否被 Handler 更新了
+      const newState = await this.stateStore.get(msg.id);
+      if (!newState || newState.status === "PROCESSING") {
+          // 只有当 Handler 没更新或者仍在处理中（且没报错），我们才可能考虑默认行为。
+          // 鉴于不同 Handler 逻辑不同，这里只记录日志。
+          this.log.debug({ id: msg.id }, "Handler finished without error");
+      }
 
     } catch (e: any) {
       this.log.error({ msg, err: e }, "Failed to process message");

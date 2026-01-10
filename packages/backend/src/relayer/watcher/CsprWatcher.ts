@@ -7,7 +7,8 @@ import {
     CeEthBurnedParser,
     UnlockRequestedParser,
     UnlockFinalizedParser,
-    CeEthMintedParser
+    CeEthMintedParser,
+    CeEthMintRequestedParser
 } from "./parsers/CsprParsers";
 import { CasperClient } from "casper-js-sdk";
 import EventSource from "eventsource";
@@ -30,6 +31,7 @@ export class CsprWatcher implements IWatcher {
     this.register(new UnlockRequestedParser());
     this.register(new UnlockFinalizedParser());
     this.register(new CeEthMintedParser());
+    this.register(new CeEthMintRequestedParser()); // 新增
   }
 
   private register(parser: EventParser<CsprEventContext>) {
@@ -78,27 +80,9 @@ export class CsprWatcher implements IWatcher {
           if (msg.topic_name === "LTEvents") {
               const hexPayload = typeof msg.payload === 'string' ? msg.payload : msg.payload?.String;
               if (hexPayload) {
-                  // Assuming payload matches "message" created in emit: MessagePayload::from(json_string)
-                  // Casper serializes MessagePayload as bytes. If it was created from String, it might be raw string bytes or hex encoded bytes depending on node version.
-                  // Based on events.rs: MessagePayload::from(json_string) -> String variant.
-                  // Usually node returns it as is if it's String. But checking hex just in case.
-                  
                   try {
                       let jsonString = hexPayload;
-                      // Heuristic: if it looks like hex and decodes to valid JSON, use it.
-                      // But MessagePayload::from(string) in Rust usually results in a String variant in JSON RPC.
-                      // If 'msg.payload' is actually a string, it might be the direct JSON string.
-                      
-                      // If the user's `events.rs` logic `hex::encode(json_string)` was commented out (as per my previous suggestion to user), 
-                      // then `MessagePayload::from(json_string)` creates a CLValue::String internally? 
-                      // Actually `MessagePayload` is `Vec<u8>` under the hood in some versions, or `String` in others.
-                      // In `casper_types`, `MessagePayload` is often a wrapper around `String` or `Vec<u8>`.
-                      
-                      // Let's assume the user followed `MessagePayload::from(json_string)`.
-                      // If `json_string` is passed, `MessagePayload` (which is `String` type alias or struct) holds it.
-                      // If the RPC returns it as hex-encoded string of the UTF8 bytes:
                       if (/^[0-9a-fA-F]+$/.test(hexPayload)) {
-                          // Try decoding hex to string
                           const decoded = Buffer.from(hexPayload, 'hex').toString('utf8');
                           if (decoded.trim().startsWith('{')) {
                               jsonString = decoded;
@@ -115,7 +99,6 @@ export class CsprWatcher implements IWatcher {
                           });
                       }
                   } catch (e) {
-                      // It might not be our event or format is different
                       // this.log.warn("Failed to parse message payload as JSON", e);
                   }
               }

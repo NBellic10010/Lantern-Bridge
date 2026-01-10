@@ -5,6 +5,7 @@ import pino from "pino";
 
 const log = pino({ name: "handler:ceeth-burned" });
 
+//ceETH被销毁，通知ETH解锁
 const VAULT_ABI = [
   "function release(address payable recipient, uint256 amount, bytes32 burnTx) external",
 ];

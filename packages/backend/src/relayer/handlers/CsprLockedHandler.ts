@@ -9,6 +9,8 @@ const WCSPR_ABI = [
   "function mint(address to, uint256 amount) external", 
 ];
 
+//CSPR被锁定，铸造wCSPR
+//目前eth端不关心多签，只需要记录这个行为到数据库，等待用户在eth端销毁wCSPR后，relayer在CSPR链上监听并调用eth合约，调用eth bridge合约的release_wcsrp_entry entry point
 export class CsprLockedHandler implements BridgeEventHandler {
   canHandle(msg: BridgeMessage): boolean {
     return msg.direction === "CSPR_TO_ETH" && msg.asset === "CSPR";

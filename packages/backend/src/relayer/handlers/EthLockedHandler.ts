@@ -5,6 +5,8 @@ import pino from "pino";
 
 const log = pino({ name: "handler:eth-locked" });
 
+//eth端锁定ETH，发起铸造ceETH请求
+//relayer 在CSPR链上监听并创建deploy，调用approve_ceeth_mint_entry entry point
 export class EthLockedHandler implements BridgeEventHandler {
   canHandle(msg: BridgeMessage): boolean {
     return msg.direction === "ETH_TO_CSPR" && msg.asset === "ETH";

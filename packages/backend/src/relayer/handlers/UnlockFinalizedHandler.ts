@@ -4,6 +4,7 @@ import pino from "pino";
 
 const log = pino({ name: "handler:unlock-finalized" });
 
+//多签达成，不需要做任何事情，只需要记录这个行为到数据库
 export class UnlockFinalizedHandler implements BridgeEventHandler {
   canHandle(msg: BridgeMessage): boolean {
     // Helper to distinguish from Request by checking raw event type or inferred context
