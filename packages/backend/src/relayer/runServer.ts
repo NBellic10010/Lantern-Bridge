@@ -1,9 +1,10 @@
 import * as dotenv from 'dotenv';
+dotenv.config();
+
 import { Relayer } from "./relayServer";
 import { loadConfig } from "./config";
 import { HttpServer } from "./HttpServer";
 
-dotenv.config();
 
 async function main() {
   const cfg = loadConfig();
