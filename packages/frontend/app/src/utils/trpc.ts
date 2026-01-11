@@ -5,10 +5,10 @@ import type { AppRouter } from '../../../../backend/src/api/router';
 function getBaseUrl() {
   if (typeof window !== 'undefined')
     // browser should use relative path if proxied, or absolute
-    return 'http://localhost:4000'; 
+    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'; 
     
   // assume localhost
-  return 'http://localhost:4000';
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 }
 
 export const trpc = createTRPCNext<AppRouter>({
