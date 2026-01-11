@@ -12,7 +12,7 @@ use crate::{
     actions::{
         approve_ceeth_mint, approve_hot_swap, approve_unlock, burn_ceeth_for_eth,
         create_ceeth_mint_request, create_unlock_request, lock_cspr_for_eth, propose_hot_swap,
-        set_ceeth_token_entry, set_pause, transfer_admin, update_apr,
+        set_bridge_fee_entry, set_ceeth_token_entry, set_pause, transfer_admin, update_apr,
     },
     types::{Guardian, VaultPosition},
 };
@@ -116,6 +116,15 @@ pub extern "C" fn call() {
     entry_points.add_entry_point(EntryPoint::new(
         "set_ceeth_token_entrypoint",
         alloc::vec![Parameter::new("token", Key::cl_type())],
+        CLType::Unit,
+        EntryPointAccess::Public,
+        EntryPointType::Called,
+    ));
+
+    // 新增：设置手续费入口点
+    entry_points.add_entry_point(EntryPoint::new(
+        "set_bridge_fee_entrypoint",
+        alloc::vec![Parameter::new("fee_bps", u32::cl_type())],
         CLType::Unit,
         EntryPointAccess::Public,
         EntryPointType::Called,
@@ -261,6 +270,12 @@ pub extern "C" fn get_position_entry() {
 pub extern "C" fn set_ceeth_token_entrypoint() {
     let token: Key = runtime::get_named_arg("token");
     set_ceeth_token_entry(token);
+}
+
+#[no_mangle]
+pub extern "C" fn set_bridge_fee_entrypoint() {
+    let fee_bps: u32 = runtime::get_named_arg("fee_bps");
+    set_bridge_fee_entry(fee_bps);
 }
 
 #[no_mangle]

@@ -37,7 +37,12 @@ export class BridgeQueue {
 
   constructor(cfg: QueueConfig, handler: (msg: BridgeMessage) => Promise<void>) {
     const name = cfg.queueName ?? "bridge-messages";
-    this.connection = new IORedis(cfg.redisUrl);
+    
+    // BullMQ requires maxRetriesPerRequest to be null
+    this.connection = new IORedis(cfg.redisUrl, {
+        maxRetriesPerRequest: null
+    });
+
     this.queue = new Queue<BridgeMessage>(name, {
       connection: this.connection,
       defaultJobOptions: {
@@ -83,4 +88,3 @@ export class BridgeQueue {
     await this.connection.quit();
   }
 }
-

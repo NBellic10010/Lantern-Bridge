@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { RelayerConfig } from "../config";
 import { BridgeMessage } from "../queue";
 import { IWatcher, EventParser } from "./interfaces";
-import { EthEventContext, EthLockedParser, WcsprBurnedParser } from "./parsers/EthParsers";
+import { EthEventContext, EthLockedParser, WcsprBurnedParser, EthReleasedParser, MintedWcsprParser } from "./parsers/EthParsers";
 import pino from "pino";
 
 export class EthWatcher implements IWatcher {
@@ -15,36 +15,39 @@ export class EthWatcher implements IWatcher {
     private cfg: RelayerConfig,
     private enqueue: (msg: BridgeMessage) => void
   ) {
-    // 假设 Bridge 合约同时负责 Lock 和 Burn (Router 模式)
-    if (cfg.ETH_VAULT_ADDRESS) {
-      this.parsers.push(new EthLockedParser(cfg.ETH_VAULT_ADDRESS));
-      this.parsers.push(new WcsprBurnedParser(cfg.ETH_VAULT_ADDRESS));
+    if (cfg.BRIDGE_CONTRACT_HASH_EVM) {
+      this.parsers.push(new EthLockedParser(cfg.BRIDGE_CONTRACT_HASH_EVM));
+      this.parsers.push(new WcsprBurnedParser(cfg.BRIDGE_CONTRACT_HASH_EVM));
+      this.parsers.push(new EthReleasedParser(cfg.BRIDGE_CONTRACT_HASH_EVM));
+      this.parsers.push(new MintedWcsprParser(cfg.BRIDGE_CONTRACT_HASH_EVM)); // 新增
     }
   }
 
   async start() {
     this.log.info("Starting ETH Watcher...");
     
-    if (!this.cfg.ETH_VAULT_ADDRESS) {
-        this.log.warn("ETH_VAULT_ADDRESS not configured, skipping ETH watching");
+    if (!this.cfg.BRIDGE_CONTRACT_HASH_EVM) {
+        this.log.warn("BRIDGE_CONTRACT_HASH_EVM not configured, skipping ETH watching");
         return;
     }
 
     const bridge = new ethers.Contract(
-        this.cfg.ETH_VAULT_ADDRESS,
+        this.cfg.BRIDGE_CONTRACT_HASH_EVM,
         [
             "event Locked(bytes32 indexed depositId, address indexed user, address token, uint256 amount, string dstChain, string dstAccount, uint8 strategy)",
-            "event BurnedwCSPR(bytes32 indexed reqId, address indexed from, uint256 amount, string dstAccount)"
+            "event BurnedwCSPR(bytes32 indexed reqId, address indexed from, uint256 amount, string dstAccount)",
+            "event Released(bytes32 indexed depositId, address indexed user, uint256 amount)",
+            "event MintedwCSPR(bytes32 indexed reqId, address indexed to, uint256 amount)" // 新增事件 ABI
         ],
         this.provider
     );
 
     // 监听 Locked
     bridge.on("Locked", (...args) => {
-        const event = args[args.length - 1]; // 最后一个是 EventLog
-        const params = args.slice(0, args.length - 1); // 前面是参数
+        const event = args[args.length - 1];
+        const params = args.slice(0, args.length - 1);
         this.processEvent({
-            contractAddress: this.cfg.ETH_VAULT_ADDRESS!,
+            contractAddress: this.cfg.BRIDGE_CONTRACT_HASH_EVM!,
             eventName: "Locked",
             args: params,
             log: event
@@ -56,15 +59,39 @@ export class EthWatcher implements IWatcher {
         const event = args[args.length - 1];
         const params = args.slice(0, args.length - 1);
         this.processEvent({
-            contractAddress: this.cfg.ETH_VAULT_ADDRESS!,
+            contractAddress: this.cfg.BRIDGE_CONTRACT_HASH_EVM!,
             eventName: "BurnedwCSPR",
             args: params,
             log: event
         });
     });
 
+    // 监听 Released
+    bridge.on("Released", (...args) => {
+        const event = args[args.length - 1];
+        const params = args.slice(0, args.length - 1);
+        this.processEvent({
+            contractAddress: this.cfg.BRIDGE_CONTRACT_HASH_EVM!,
+            eventName: "Released",
+            args: params,
+            log: event
+        });
+    });
+
+    // 新增：监听 MintedwCSPR
+    bridge.on("MintedwCSPR", (...args) => {
+        const event = args[args.length - 1];
+        const params = args.slice(0, args.length - 1);
+        this.processEvent({
+            contractAddress: this.cfg.BRIDGE_CONTRACT_HASH_EVM!,
+            eventName: "MintedwCSPR",
+            args: params,
+            log: event
+        });
+    });
+
     this.contracts.push(bridge);
-    this.log.info(`Listening on Bridge at ${this.cfg.ETH_VAULT_ADDRESS}`);
+    this.log.info(`Listening on Bridge at ${this.cfg.BRIDGE_CONTRACT_HASH_EVM}`);
   }
 
   private processEvent(ctx: EthEventContext) {
@@ -82,4 +109,3 @@ export class EthWatcher implements IWatcher {
       }
   }
 }
-

@@ -5,7 +5,7 @@ set -e
 CONTRACT_NAME="bridge_core"
 TARGET_DIR="target/wasm32-unknown-unknown/release"
 
-rm bin/${CONTRACT_NAME}.wasm
+rm -f bin/${CONTRACT_NAME}.wasm
 
 RUSTFLAGS="-C target-cpu=mvp"
 

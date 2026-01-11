@@ -3,7 +3,6 @@ import { z } from "zod";
 export const ConfigSchema = z.object({
   ETH_RPC: z.string(),
   ETH_CONFIRMATIONS: z.coerce.number().min(0).default(12),
-  ETH_VAULT_ADDRESS: z.string().optional(), // EthBridgeVault
   ETH_WCSRP_ADDRESS: z.string().optional(), // WrappedCSPR
   CSPR_NODE: z.string(),
   CSPR_POLL_MS: z.coerce.number().min(500).default(5000),

@@ -73,6 +73,8 @@ dependencies = [
  "casper_types_derive",
  "cep18",
  "hex",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

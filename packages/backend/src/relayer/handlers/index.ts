@@ -7,3 +7,5 @@ export * from "./UnlockRequestedHandler";
 export * from "./UnlockFinalizedHandler";
 export * from "./CeEthMintedHandler";
 export * from "./CeEthMintRequestedHandler";
+export * from "./EthReleasedHandler";
+export * from "./EthMintedWcsprHandler";

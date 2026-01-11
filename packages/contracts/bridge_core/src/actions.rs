@@ -8,24 +8,44 @@ use casper_contract::{
 };
 use casper_types::{contracts::ContractHash, runtime_args, Key, URef, U256, U512};
 
-//TODO 需要重写资金/钱包相关逻辑
-
 use crate::{
     events::{
-        emit, CeETHBurned, CeETHMinted, CsprLockedForTarget, EventType, HotSwapActivated,
-        HotSwapProposed, PauseChanged, UnlockFinalized, UnlockRequested, YieldAccrued,
+        emit, CeETHBurned, CeETHMintRequested, CeETHMinted, CsprLockedForTarget, EventType,
+        HotSwapActivated, HotSwapProposed, PauseChanged, UnlockFinalized, UnlockRequested,
+        YieldAccrued,
     },
     storage::{
-        ensure_dictionaries, get_admin, get_bridge_purse, get_ceeth_token, get_guardian_weight,
-        is_paused, is_tx_processed, mark_tx_processed, read_apr_bps, read_dictionary_value,
-        read_threshold, set_admin, set_ceeth_token, set_paused, write_active_patch,
-        write_base_config, write_dictionary_value, DICT_BALANCES, DICT_CEETH_MINT_REQS,
-        DICT_HOTSWAP, DICT_UNLOCK_REQS, KEY_ADMIN, KEY_BRIDGE_PURSE,
+        ensure_dictionaries,
+        get_admin,
+        get_bridge_purse,
+        get_ceeth_token,
+        get_guardian_weight,
+        is_paused,
+        is_tx_processed,
+        mark_tx_processed,
+        read_apr_bps,
+        read_dictionary_value,
+        read_fee_bps,
+        read_threshold,
+        set_admin,
+        set_ceeth_token,
+        set_fee_bps, // 新增
+        set_paused,
+        write_active_patch,
+        write_base_config,
+        write_dictionary_value,
+        DICT_BALANCES,
+        DICT_CEETH_MINT_REQS,
+        DICT_HOTSWAP,
+        DICT_UNLOCK_REQS,
+        KEY_ADMIN,
+        KEY_BRIDGE_PURSE,
     },
     types::{BridgeError, Guardian, HotSwapPatch, UnlockRequest, VaultPosition},
     utils::compute_yield,
 };
 
+// ... existing code ...
 /// 确保调用者为管理员
 fn ensure_admin() {
     let caller = runtime::get_caller();
@@ -115,6 +135,9 @@ pub fn init(admin: Key, guardians: Vec<Guardian>, threshold: u32, base_apr_bps: 
 
     // 保存守护权重
     crate::storage::save_guardians(guardians);
+
+    // 初始化费率为 0
+    set_fee_bps(0);
 }
 
 /// 创建跨链解锁请求（由后台 Relayer 触发）
@@ -384,6 +407,12 @@ pub fn set_ceeth_token_entry(token: Key) {
     set_ceeth_token(token);
 }
 
+/// 设置跨链手续费 (万分比)
+pub fn set_bridge_fee_entry(fee_bps: u32) {
+    ensure_admin();
+    set_fee_bps(fee_bps);
+}
+
 /// CSPR -> ETH：锁仓 CSPR（计息资产记账），等待对端 mint wCSPR
 pub fn lock_cspr_for_eth(
     amount: U256,
@@ -411,9 +440,21 @@ pub fn lock_cspr_for_eth(
     )
     .unwrap_or_revert_with(BridgeError::TransferFailed);
 
+    // === 计算扣费 ===
+    let fee_bps = read_fee_bps();
+    let fee = if fee_bps > 0 {
+        amount * U256::from(fee_bps) / U256::from(10000)
+    } else {
+        U256::zero()
+    };
+
+    let actual_amount = amount - fee;
+
+    // 更新用户头寸 (仅记录 actual_amount)
+    // Fee 自动留在 bridge_purse (合约钱包) 中，相当于归属于项目方
     let caller = runtime::get_caller();
     let mut pos = accrue_position(&Key::Account(caller.into()));
-    pos.principal = pos.principal.saturating_add(amount);
+    pos.principal = pos.principal.saturating_add(actual_amount);
     save_position(&Key::Account(caller.into()), pos);
 
     mark_tx_processed(&tx_id);
@@ -421,13 +462,13 @@ pub fn lock_cspr_for_eth(
         sender: Key::Account(caller.into()),
         dst_chain: dst_chain.clone(),
         recipient: recipient.clone(),
-        amount,
+        amount: actual_amount, // 通知 Relayer 铸造扣费后的金额
         tx_id,
         event_type: EventType::CSPR_LOCKED_FOR_TARGET,
     });
 }
 
-/// ETH -> CSPR：创建 ceETH 铸造请求（由 Relayer 发起）
+/// ETH -> CSPR：创建 ceETH 铸造请求（由 用户在ETH上操作后，relayer 在CSPR上监听并创建请求）
 pub fn create_ceeth_mint_request(
     request_id: String,
     recipient: Key,
@@ -447,14 +488,23 @@ pub fn create_ceeth_mint_request(
         id: request_id.clone(),
         recipient,
         amount,
-        src_chain,
-        dst_chain,
+        src_chain: src_chain.clone(),
+        dst_chain: dst_chain.clone(),
         timestamp_ms: now_ms(),
         finalized: false,
         approvals_weight: 0,
     };
 
     write_dictionary_value(DICT_CEETH_MINT_REQS, &request_id, req);
+
+    emit(CeETHMintRequested {
+        request_id,
+        recipient,
+        amount,
+        src_chain,
+        dst_chain,
+        event_type: EventType::CEETH_MINT_REQUESTED,
+    });
 }
 
 /// 守护/管理员审批 ceETH 铸造；达到阈值后直接 mint
@@ -539,31 +589,40 @@ pub fn burn_ceeth_for_eth(amount: U256, tx_id: String, eth_owner: String) {
     let bridge_package_hash = key_to_contract_hash(bridge_package_key).unwrap_or_revert();
     let ceeth_contract_hash = key_to_contract_hash(ceeth_contract_key).unwrap_or_revert();
 
-    /// First: transfer ceETH from caller to bridge contract
+    // === 计算扣费 (对于 Burn 操作也收费) ===
+    // 注意：Burn 销毁的是 ceETH，但用户期望获得的是 ETH。
+    // 如果我们在 Casper 链上扣除 ceETH，那么 Event 发出的 amount 就是扣除后的，Relayer 在 ETH 链上就会释放较少的 ETH。
+    let fee_bps = read_fee_bps();
+    let fee = if fee_bps > 0 {
+        amount * U256::from(fee_bps) / U256::from(10000)
+    } else {
+        U256::zero()
+    };
+
+    let actual_amount = amount - fee;
+
+    // 1. 用户将 FULL amount 转给 Bridge
     let transfer_args = runtime_args! {
         "owner" => caller,
         "recipient" => bridge_package_hash, // 转给我(Bridge)
         "amount" => amount
     };
-
     runtime::call_contract::<()>(ceeth_contract_hash, "transfer_from", transfer_args);
 
-    /// Second: burn ceETH from bridge contract
+    // 2. Bridge 销毁 actual_amount
     let burn_args = runtime_args! {
-        "amount" => amount,
+        "amount" => actual_amount,
         "owner" => bridge_package_hash
     };
+    runtime::call_contract::<()>(ceeth_contract_hash, "burn", burn_args);
 
-    runtime::call_contract::<()>(
-        ceeth_contract_hash,
-        "burn", // 调用者是 Bridge，所以销毁的是 Bridge 的余额
-        burn_args,
-    );
+    // 3. 剩余的 fee 留在 Bridge 的 ceETH 余额中作为利润 (未销毁)
+    // 管理员后续可以调用 ceETH 的 transfer 把这些 fee 提走
 
     mark_tx_processed(&tx_id);
     emit(CeETHBurned {
         eth_owner: eth_owner,
-        amount,
+        amount: actual_amount, // 通知 Relayer 只释放 actual_amount
         tx_id,
         event_type: EventType::CEETH_BURNED,
     });

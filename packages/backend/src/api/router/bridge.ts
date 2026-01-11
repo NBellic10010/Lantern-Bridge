@@ -46,7 +46,7 @@ export const bridgeRouter = router({
 
   // Note: Actual signing happens on the client side (frontend).
   // The backend API prepares the transaction data or relays the signed transaction.
-  createBridgeTx: publicProcedure
+  createBridgeTx: publicProcedure   
     .input(z.object({
       fromChain: z.string(),
       toChain: z.string(),

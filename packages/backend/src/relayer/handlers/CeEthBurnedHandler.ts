@@ -18,11 +18,11 @@ export class CeEthBurnedHandler implements BridgeEventHandler {
   async handle(msg: BridgeMessage, ctx: RelayerContext): Promise<void> {
     log.info(`Handling ceETH Burn event: ${msg.id}`);
 
-    if (!ctx.cfg.ETH_VAULT_ADDRESS) {
-        throw new Error("ETH_VAULT_ADDRESS not configured");
+    if (!ctx.cfg.BRIDGE_CONTRACT_HASH_EVM) {
+        throw new Error("BRIDGE_CONTRACT_HASH_EVM not configured");
     }
 
-    const vault = new ethers.Contract(ctx.cfg.ETH_VAULT_ADDRESS, VAULT_ABI, ctx.ethWallet);
+    const vault = new ethers.Contract(ctx.cfg.BRIDGE_CONTRACT_HASH_EVM, VAULT_ABI, ctx.ethWallet);
     const burnTxHash = "0x" + msg.srcTxHash; // Ensure format match if needed
 
     log.info(`Releasing ETH to ${msg.recipient} amount ${msg.amount}`);

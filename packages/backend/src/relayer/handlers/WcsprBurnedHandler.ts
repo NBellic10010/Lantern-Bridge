@@ -14,7 +14,7 @@ export class WcsprBurnedHandler implements BridgeEventHandler {
     log.info(`Handling wCSPR Burn event: ${msg.id}`);
 
     // wCSPR Burned on Ethereum -> Create Unlock Request on Casper
-    const entryPoint = "create_unlock_request";
+    const entryPoint = "create_unlock_request_entry";
     const bridgeContractHash = ctx.cfg.BRIDGE_CONTRACT_HASH_CSPR; 
 
     log.info(`Calling Casper contract ${bridgeContractHash} entrypoint ${entryPoint}`);

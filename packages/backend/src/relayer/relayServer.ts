@@ -15,7 +15,9 @@ import {
   UnlockRequestedHandler,
   UnlockFinalizedHandler,
   CeEthMintedHandler,
-  CeEthMintRequestedHandler
+  CeEthMintRequestedHandler,
+  EthReleasedHandler,
+  EthMintedWcsprHandler
 } from "./handlers";
 
 /**
@@ -62,7 +64,9 @@ export class Relayer {
         new UnlockRequestedHandler(),
         new UnlockFinalizedHandler(),
         new CeEthMintedHandler(),
-        new CeEthMintRequestedHandler() // 新增
+        new CeEthMintRequestedHandler(),
+        new EthReleasedHandler(),
+        new EthMintedWcsprHandler() // 新增
     ];
 
     this.queue = new BridgeQueue(
@@ -148,6 +152,8 @@ export class Relayer {
       // - UnlockFinalized: 成功后 COMPLETED
       // - CeEthMintRequested: 成功后 PROCESSING
       // - CeEthMinted: 成功后 COMPLETED
+      // - EthReleased: 成功后 COMPLETED
+      // - EthMintedWcspr: 成功后 COMPLETED
       
       // 因此，我们**不应该**在这里强制覆盖为 COMPLETED，除非我们确定 Handler 没做。
       // 实际上，为了保险，最好让 Handler 自己决定。

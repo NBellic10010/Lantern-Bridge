@@ -16,7 +16,7 @@ export class EthLockedHandler implements BridgeEventHandler {
     log.info(`Handling ETH Lock event: ${msg.id}`);
 
     // ETH Locked on Ethereum -> Create ceETH Mint Request on Casper
-    const entryPoint = "create_ceeth_mint_request";
+    const entryPoint = "create_ceeth_mint_request_entry";
     const bridgeContractHash = ctx.cfg.BRIDGE_CONTRACT_HASH_CSPR;
 
     log.info(`Calling Casper contract ${bridgeContractHash} entrypoint ${entryPoint}`);

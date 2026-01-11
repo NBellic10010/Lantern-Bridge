@@ -73,3 +73,62 @@ export class WcsprBurnedParser implements EventParser<EthEventContext> {
   }
 }
 
+export class EthReleasedParser implements EventParser<EthEventContext> {
+  constructor(private readonly bridgeAddress: string) {}
+
+  parse(ctx: EthEventContext): BridgeMessage | null {
+    if (
+      ctx.contractAddress.toLowerCase() !== this.bridgeAddress.toLowerCase() ||
+      ctx.eventName !== "Released"
+    ) {
+      return null;
+    }
+
+    // args: [depositId, user, amount]
+    const [depositId, user, amount] = ctx.args;
+
+    return {
+      id: depositId,
+      requestId: depositId,
+      direction: "CSPR_TO_ETH", // Inbound completion
+      srcChainId: "ETH", // Event on ETH
+      dstChainId: "ETH", // Completed on ETH
+      srcTxHash: ctx.log.transactionHash,
+      sender: "bridge",
+      recipient: user,
+      asset: "ETH/ERC20", 
+      amount: amount.toString(),
+      raw: { depositId },
+    };
+  }
+}
+
+export class MintedWcsprParser implements EventParser<EthEventContext> {
+  constructor(private readonly bridgeAddress: string) {}
+
+  parse(ctx: EthEventContext): BridgeMessage | null {
+    if (
+      ctx.contractAddress.toLowerCase() !== this.bridgeAddress.toLowerCase() ||
+      ctx.eventName !== "MintedwCSPR"
+    ) {
+      return null;
+    }
+
+    // args: [reqId, to, amount]
+    const [reqId, to, amount] = ctx.args;
+
+    return {
+      id: reqId, // 此处的 reqId 对应 Casper 端的 tx_id
+      requestId: reqId,
+      direction: "CSPR_TO_ETH", // Inbound completion
+      srcChainId: "ETH", 
+      dstChainId: "ETH",
+      srcTxHash: ctx.log.transactionHash,
+      sender: "bridge",
+      recipient: to,
+      asset: "wCSPR",
+      amount: amount.toString(),
+      raw: { reqId },
+    };
+  }
+}

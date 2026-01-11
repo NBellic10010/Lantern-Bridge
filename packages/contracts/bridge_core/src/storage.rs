@@ -27,6 +27,7 @@ pub const KEY_PAUSED: &str = "paused";
 pub const KEY_ACTIVE_PATCH: &str = "active_patch";
 pub const KEY_CEETH_TOKEN: &str = "ceeth_token";
 pub const KEY_BRIDGE_PURSE: &str = "bridge_purse";
+pub const KEY_FEE_BPS: &str = "fee_bps"; // 新增：手续费率 (万分比)
 
 // ==========================================
 // 2. 核心工具函数 (Generic Helpers)
@@ -223,4 +224,21 @@ pub fn read_active_patch() -> Option<String> {
 pub fn write_active_patch(hash: String) {
     let uref = get_or_create_uref(KEY_ACTIVE_PATCH, hash.clone());
     storage::write(uref, hash);
+}
+
+/// 读取费率 (万分比)
+pub fn read_fee_bps() -> u32 {
+    match runtime::get_key(KEY_FEE_BPS) {
+        Some(key) => {
+            let uref = key.into_uref().unwrap_or_revert();
+            storage::read(uref).unwrap_or_revert().unwrap_or(0)
+        }
+        None => 0, // 默认为 0
+    }
+}
+
+/// 设置费率 (万分比)
+pub fn set_fee_bps(fee_bps: u32) {
+    let uref = get_or_create_uref(KEY_FEE_BPS, fee_bps);
+    storage::write(uref, fee_bps);
 }

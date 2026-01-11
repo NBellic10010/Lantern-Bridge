@@ -8,7 +8,7 @@ loadEnv();
 async function main() {
   const cfg = loadConfig();
   const relayer = new Relayer(cfg);
-  const http = new HttpServer(3000);
+  const http = new HttpServer(3001);
 
   http.start();
   await relayer.start();
