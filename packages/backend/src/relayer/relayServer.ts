@@ -44,11 +44,35 @@ export class Relayer {
     this.csprClient = new CasperClient(cfg.CSPR_NODE);
     
     // Load CSPR Key
-    const pem = fs.readFileSync(cfg.CSPR_PRIVATE_KEY_PATH, 'utf8');
-    if (pem.includes("ED25519")) {
-        this.csprKeyPair = Keys.Ed25519.loadKeyPairFromPrivateFile(cfg.CSPR_PRIVATE_KEY_PATH);
-    } else {
-        this.csprKeyPair = Keys.Secp256K1.loadKeyPairFromPrivateFile(cfg.CSPR_PRIVATE_KEY_PATH);
+    let keyPath = cfg.CSPR_PRIVATE_KEY_PATH;
+    let tempKeyFile = "";
+
+    if (!keyPath && cfg.CSPR_PRIVATE_KEY_CONTENT) {
+        // Create temp file from content
+        const os = require('os');
+        const path = require('path');
+        const tmpDir = os.tmpdir();
+        tempKeyFile = path.join(tmpDir, `cspr_key_${Date.now()}.pem`);
+        fs.writeFileSync(tempKeyFile, cfg.CSPR_PRIVATE_KEY_CONTENT);
+        keyPath = tempKeyFile;
+    }
+
+    if (!keyPath) {
+        throw new Error("Missing CSPR private key configuration (PATH or CONTENT)");
+    }
+
+    try {
+        const pem = fs.readFileSync(keyPath, 'utf8');
+        if (pem.includes("ED25519")) {
+            this.csprKeyPair = Keys.Ed25519.loadKeyPairFromPrivateFile(keyPath);
+        } else {
+            this.csprKeyPair = Keys.Secp256K1.loadKeyPairFromPrivateFile(keyPath);
+        }
+    } finally {
+        // Clean up temp file if created
+        if (tempKeyFile && fs.existsSync(tempKeyFile)) {
+            fs.unlinkSync(tempKeyFile);
+        }
     }
 
     const redisUrl = process.env.REDIS_URL ?? "redis://127.0.0.1:6379";
