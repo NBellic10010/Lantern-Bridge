@@ -1,9 +1,9 @@
-import { config as loadEnv } from "dotenv";
+import * as dotenv from 'dotenv';
 import { Relayer } from "./relayServer";
 import { loadConfig } from "./config";
 import { HttpServer } from "./HttpServer";
 
-loadEnv();
+dotenv.config();
 
 async function main() {
   const cfg = loadConfig();
